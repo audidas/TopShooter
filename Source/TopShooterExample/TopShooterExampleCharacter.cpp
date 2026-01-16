@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
+#include "Gameframework/TopDownPlayerController.h"
 
 ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 {
@@ -19,11 +20,11 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
@@ -92,10 +93,11 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)
 {
-	if (GetController() != nullptr)
+	ATopDownPlayerController* PlayerController = Cast<ATopDownPlayerController>(GetController());
+	if (PlayerController && PlayerController->PlayerCameraManager)
 	{
 		// find out which way is forward
-		const FRotator Rotation = GetController()->GetControlRotation();
+		const FRotator Rotation = PlayerController ->PlayerCameraManager->GetCameraRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
