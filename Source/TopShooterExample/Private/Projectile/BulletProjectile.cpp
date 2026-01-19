@@ -14,10 +14,12 @@ ABulletProjectile::ABulletProjectile()
 	
 	CollisionSphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionSphereComponent->InitSphereRadius(5.f);
-	CollisionSphereComponent->SetCollisionProfileName("Projectile");
+	CollisionSphereComponent->SetCollisionProfileName(TEXT("Bullet"));
+
 	RootComponent = CollisionSphereComponent;
 	
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
+	ProjectileMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	ProjectileMesh->SetupAttachment(RootComponent);
 	
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
@@ -27,6 +29,8 @@ ABulletProjectile::ABulletProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
+	
+	
 }
 
 // Called when the game starts or when spawned
