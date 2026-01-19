@@ -12,6 +12,8 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 
+class AWeapon;
+
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 /**
@@ -70,6 +72,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	
+	virtual void BeginPlay() override;
+	
 	void Attack();
 
 public:
@@ -89,8 +93,6 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
-	
-	
 
 public:
 
@@ -103,5 +105,11 @@ public:
 public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ABulletProjectile> BulletProjectileClass;
+	
+	UPROPERTY(EditDefaultsOnly , Category="Combat")
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	AWeapon* CurrentWeapon;
 };
 

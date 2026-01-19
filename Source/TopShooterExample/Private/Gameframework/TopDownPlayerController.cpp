@@ -64,13 +64,13 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 			
 			if (bHit)
 			{
-				FVector TargetLocation = HitResult.Location;
-				
+				FVector HitTargetLocation = HitResult.Location;
+				TargetLocation = HitTargetLocation;
 				if (APawn* ControllerPawn = GetPawn())
 				{
 					FVector PawnLocation  =ControllerPawn->GetActorLocation();
 					
-					FVector LookVector = TargetLocation - PawnLocation;
+					FVector LookVector = HitTargetLocation - PawnLocation;
 					LookVector.Z =0.0f;
 					
 					FRotator LookRotation = LookVector.Rotation();

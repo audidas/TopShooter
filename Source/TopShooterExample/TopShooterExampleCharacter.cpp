@@ -13,6 +13,7 @@
 #include "TopShooterExample.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Projectile/BulletProjectile.h"
+#include "Weapon/Weapon.h"
 
 ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 {
@@ -95,24 +96,34 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void ATopShooterExampleCharacter::Attack()
+void ATopShooterExampleCharacter::BeginPlay()
 {
-	if (BulletProjectileClass)
+	Super::BeginPlay();
+	
+	if (DefaultWeaponClass)
 	{
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			FVector SpawnLocation = GetActorLocation() + (GetActorForwardVector() * 100.0f);
-			FRotator SpawnRotation = GetControlRotation();
-			SpawnRotation.Pitch = 0.0f;
-			
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
-			SpawnParams.Instigator = GetInstigator();
-
-			World->SpawnActor<ABulletProjectile>(BulletProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+			SpawnParams.Instigator = this;
+			
+			AWeapon* SpawningWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+			if (SpawningWeapon)
+			{
+				CurrentWeapon = SpawningWeapon;
+				CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("HandGrip_R"));
+			}
 		}
-		
+	}
+}
+
+void ATopShooterExampleCharacter::Attack()
+{
+	if ( CurrentWeapon)
+	{
+		CurrentWeapon->Attack();
 	}
 }
 

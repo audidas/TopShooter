@@ -19,8 +19,7 @@ public:
 	ATopDownPlayerController();
 	
 	virtual void Tick( float DeltaTime ) override;
-	
-	
+
 protected:
 	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
@@ -28,6 +27,15 @@ protected:
 	virtual void BeginPlay() override;
 	
 	virtual void SetupInputComponent() override;
+
 	
+private: 
+	
+	FVector TargetLocation;
+	
+public : 
+	FVector GetCashedTargetLocation() const {return TargetLocation;};
+	
+
 	
 };
