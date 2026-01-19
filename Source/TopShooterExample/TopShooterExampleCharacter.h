@@ -48,6 +48,9 @@ protected:
 	/** Mouse Look Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AttackAction;
 
 public:
 
@@ -66,6 +69,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+	void Attack();
 
 public:
 
@@ -84,6 +89,8 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+	
+	
 
 public:
 
@@ -92,5 +99,9 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	
+public:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class ABulletProjectile> BulletProjectileClass;
 };
 

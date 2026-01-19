@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
 #include "Gameframework/TopDownPlayerController.h"
+#include "Projectile/BulletProjectile.h"
 
 ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 {
@@ -66,6 +67,9 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
+		
+		// Attack
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered , this , &ATopShooterExampleCharacter::Attack);
 	}
 	else
 	{
@@ -89,6 +93,27 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void ATopShooterExampleCharacter::Attack()
+{
+	if (BulletProjectileClass)
+	{
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FVector SpawnLocation = GetActorLocation() + (GetActorForwardVector() * 100.0f);
+			FRotator SpawnRotation = GetControlRotation();
+			SpawnRotation.Pitch = 0.0f;
+			
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = GetInstigator();
+
+			World->SpawnActor<ABulletProjectile>(BulletProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+		}
+		
+	}
 }
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)

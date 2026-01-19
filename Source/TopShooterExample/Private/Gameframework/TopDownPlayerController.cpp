@@ -76,8 +76,6 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 					FRotator LookRotation = LookVector.Rotation();
 					SetControlRotation(LookRotation);
 				}
-				
-				DrawDebugLine(GetWorld() , WorldLocation,TargetLocation , FColor::Red,false,3,0,1);
 			}
 		}
 	}
