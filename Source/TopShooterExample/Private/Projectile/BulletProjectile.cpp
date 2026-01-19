@@ -14,7 +14,7 @@ ABulletProjectile::ABulletProjectile()
 	
 	CollisionSphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionSphereComponent->InitSphereRadius(5.f);
-	CollisionSphereComponent->SetCollisionProfileName("Bullet");
+	CollisionSphereComponent->SetCollisionProfileName(TEXT("Bullet"));
 
 	RootComponent = CollisionSphereComponent;
 	
