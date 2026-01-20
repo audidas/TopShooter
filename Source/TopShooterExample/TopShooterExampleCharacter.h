@@ -53,6 +53,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* ReloadAction;
+
 
 public:
 
@@ -73,6 +77,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 	
 	virtual void BeginPlay() override;
+	
+	virtual void Tick(float DeltaTime) override;
 	
 	void Attack();
 
@@ -101,6 +107,7 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 	
 public:
 	UPROPERTY(EditDefaultsOnly)
@@ -114,5 +121,30 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* FireMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* ReloadMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> HUDClass;
+	
+	UPROPERTY()
+	UUserWidget* HUDWidget;
+	
+
+protected:
+	bool bIsReloading= false;
+	
+
+	
+	void StartReload();
+	
+	void FinishReload();
+	
+public:
+	UFUNCTION(BlueprintCallable)
+	bool IsReloading() const {return bIsReloading;}
+	
+	
 };
 

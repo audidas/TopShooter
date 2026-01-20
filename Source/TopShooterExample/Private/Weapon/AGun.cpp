@@ -18,6 +18,7 @@ void AAGun::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CurrentAmmo = MaxAmmo;
 }
 
 // Called every frame
@@ -31,6 +32,11 @@ void AAGun::Attack()
 	Super::Attack();
 	
 	if (!ProjectileClass) return;
+	
+	if (CurrentAmmo <=0 )
+	{
+		return;
+	}
 
 	FVector MuzzleLocation = WeaponMesh->DoesSocketExist(TEXT("MuzzleSocket"))
 		                         ? WeaponMesh->GetSocketLocation("MuzzleSocket")
@@ -55,8 +61,13 @@ void AAGun::Attack()
 		SpawnParams.Instigator = GetInstigator();
 		
 		GetWorld()->SpawnActor<ABulletProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation,SpawnParams);
-		
+		CurrentAmmo--;
 	}
 	
+}
+
+void AAGun::Reload()
+{
+	CurrentAmmo = MaxAmmo;
 }
 

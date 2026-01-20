@@ -31,4 +31,17 @@ protected:
 	
 	virtual void Attack() override;
 	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	int32 MaxAmmo =30;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	int32 CurrentAmmo;
+	
+public:
+	int32 GetCurrentAmmo() const {return CurrentAmmo;};
+	int32 GetMaxAmmo() const {return MaxAmmo;};
+	
+	void Reload();
+	
 };
