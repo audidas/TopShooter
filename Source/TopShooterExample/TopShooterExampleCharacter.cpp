@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
+#include "Blueprint/UserWidget.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Projectile/BulletProjectile.h"
 #include "Weapon/AGun.h"
@@ -23,7 +24,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = true;
+	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
@@ -34,7 +35,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -43,7 +44,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;
-	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->bUsePawnControlRotation = false;
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -119,6 +120,31 @@ void ATopShooterExampleCharacter::BeginPlay()
 				CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("HandGrip_R"));
 			}
 		}
+	}
+	
+	if (HUDClass)
+	{
+		HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToViewport();
+		}
+	}
+}
+
+void ATopShooterExampleCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
+	if (PC)
+	{
+		FVector TargetPoint = PC->GetCachedTargetLocation();
+		
+		TargetPoint.Z = GetActorLocation().Z;
+		FVector LookVector = TargetPoint - GetActorLocation();
+		FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
+		SetActorRotation(LookRotation);
 	}
 }
 

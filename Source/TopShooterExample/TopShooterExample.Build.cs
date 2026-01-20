@@ -17,11 +17,9 @@ public class TopShooterExample : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
-			"UMG",
-			"Slate"
+			"UMG"
 		});
-
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { 	"Slate" , "SlateCore" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"TopShooterExample",

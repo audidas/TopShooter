@@ -17,6 +17,8 @@ ATopDownPlayerController::ATopDownPlayerController()
 void ATopDownPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	bShowMouseCursor = true;
 }
 
 void ATopDownPlayerController::SetupInputComponent()
@@ -48,36 +50,12 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 		
 		if (DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
 		{
-			FHitResult HitResult;
-			FVector TraceEnd = WorldLocation +(WorldDirection * 10000.0f);
+			float GunHeight = 90.0f;
+			if (FMath::IsNearlyZero(WorldDirection.Z)) return;
 			
-			FCollisionQueryParams QueryParameters;
-			QueryParameters.AddIgnoredActor(GetPawn());
-			
-			bool bHit = GetWorld()-> LineTraceSingleByChannel(
-				HitResult,
-				WorldLocation,
-				TraceEnd,
-				ECC_Visibility,
-				QueryParameters
-			);
-			
-			if (bHit)
-			{
-				FVector HitTargetLocation = HitResult.Location;
-				TargetLocation = HitTargetLocation;
-				if (APawn* ControllerPawn = GetPawn())
-				{
-					FVector PawnLocation  =ControllerPawn->GetActorLocation();
-					
-					FVector LookVector = HitTargetLocation - PawnLocation;
-					LookVector.Z =0.0f;
-					
-					FRotator LookRotation = LookVector.Rotation();
-					SetControlRotation(LookRotation);
-				}
-			}
+			float T = (GunHeight - WorldLocation.Z) / WorldDirection.Z;
+			FVector IntersectionPoint = WorldLocation + ( WorldDirection * T);
+			TargetLocation = IntersectionPoint;
 		}
 	}
-	
 }
