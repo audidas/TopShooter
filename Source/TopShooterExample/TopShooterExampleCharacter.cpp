@@ -13,6 +13,7 @@
 #include "TopShooterExample.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Projectile/BulletProjectile.h"
+#include "Weapon/AGun.h"
 #include "Weapon/Weapon.h"
 
 ATopShooterExampleCharacter::ATopShooterExampleCharacter()
@@ -71,6 +72,8 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		
 		// Attack
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered , this , &ATopShooterExampleCharacter::Attack);
+		
+		EnhancedInputComponent->BindAction(ReloadAction ,ETriggerEvent::Started , this , &ATopShooterExampleCharacter::StartReload );
 	}
 	else
 	{
@@ -121,6 +124,7 @@ void ATopShooterExampleCharacter::BeginPlay()
 
 void ATopShooterExampleCharacter::Attack()
 {
+	if (bIsReloading) return;
 	if ( CurrentWeapon)
 	{
 		CurrentWeapon->Attack();
@@ -173,4 +177,39 @@ void ATopShooterExampleCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void ATopShooterExampleCharacter::StartReload()
+{
+	
+	if (bIsReloading || ! CurrentWeapon) return;
+	
+	bIsReloading = true;
+	
+	GetCharacterMovement()->MaxWalkSpeed =300.0f;
+	
+	float Duration = 2.0f;
+	
+	if (ReloadMontage)
+	{
+		Duration = PlayAnimMontage(ReloadMontage);
+	}
+	
+	FTimerHandle ReloadTimerHandle;
+	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
+	
+	
+}
+
+void ATopShooterExampleCharacter::FinishReload()
+{
+	
+	bIsReloading = false;
+	GetCharacterMovement()->MaxWalkSpeed =600.0f;
+	
+	AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon);
+	if (CurrentWeapon && CurrentGun)
+	{
+		CurrentGun->Reload();
+	}
 }

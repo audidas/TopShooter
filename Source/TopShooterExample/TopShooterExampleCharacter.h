@@ -53,6 +53,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* ReloadAction;
 
 public:
 
@@ -114,5 +117,19 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* FireMontage;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* ReloadMontage;
+	
+protected:
+	bool bIsReloading= false;
+	
+	void StartReload();
+	
+	void FinishReload();
+	
+public:
+	UFUNCTION(BlueprintCallable)
+	bool IsReloading() const {return bIsReloading;}
 };
 

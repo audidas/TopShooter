@@ -42,4 +42,6 @@ public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
 	int32 GetMaxAmmo() const {return MaxAmmo;};
 	
+	void Reload();
+	
 };

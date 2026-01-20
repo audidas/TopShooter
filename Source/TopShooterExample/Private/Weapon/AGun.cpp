@@ -35,7 +35,6 @@ void AAGun::Attack()
 	
 	if (CurrentAmmo <=0 )
 	{
-		UE_LOG(LogTemp , Warning , TEXT("탄약 없음 : %d" ), CurrentAmmo );
 		return;
 	}
 
@@ -62,9 +61,13 @@ void AAGun::Attack()
 		SpawnParams.Instigator = GetInstigator();
 		
 		GetWorld()->SpawnActor<ABulletProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation,SpawnParams);
-		UE_LOG(LogTemp, Log, TEXT("남은 탄약: %d"), CurrentAmmo - 1);
 		CurrentAmmo--;
 	}
 	
+}
+
+void AAGun::Reload()
+{
+	CurrentAmmo = MaxAmmo;
 }
 
