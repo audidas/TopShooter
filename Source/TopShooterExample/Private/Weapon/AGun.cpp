@@ -42,7 +42,7 @@ void AAGun::Attack()
 	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(Pawn->GetController());
 	if (PC)
 	{
-		FVector MouseLocation = PC ->GetCashedTargetLocation();
+		FVector MouseLocation = PC ->GetCachedTargetLocation();
 		FVector FireDirection = MouseLocation - MuzzleLocation;
 		
 		FireDirection.Z = 0.0f;

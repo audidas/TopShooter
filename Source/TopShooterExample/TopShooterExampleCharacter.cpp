@@ -125,6 +125,11 @@ void ATopShooterExampleCharacter::Attack()
 	{
 		CurrentWeapon->Attack();
 	}
+	
+	if (FireMontage)
+	{
+		PlayAnimMontage(FireMontage);
+	}
 }
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)

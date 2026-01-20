@@ -111,5 +111,8 @@ public:
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	AWeapon* CurrentWeapon;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UAnimMontage* FireMontage;
 };
 

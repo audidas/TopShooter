@@ -34,7 +34,7 @@ private:
 	FVector TargetLocation;
 	
 public : 
-	FVector GetCashedTargetLocation() const {return TargetLocation;};
+	FVector GetCachedTargetLocation() const {return TargetLocation;};
 	
 
 	
