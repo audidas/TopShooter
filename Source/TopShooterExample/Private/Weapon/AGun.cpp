@@ -92,6 +92,16 @@ void AAGun::Attack()
 			GetActorLocation()
 			);
 	}
+	
+	if (FireCameraShake)
+	{
+		APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		
+		if (PC)
+		{
+			PC->ClientStartCameraShake(FireCameraShake,1.0f);
+		}
+	}
 }
 
 void AAGun::PlayReloadSound()

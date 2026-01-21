@@ -49,6 +49,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	class USoundBase* ReloadSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<class UCameraShakeBase> FireCameraShake;
 
 public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
