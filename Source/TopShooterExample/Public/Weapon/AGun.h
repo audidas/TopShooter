@@ -38,9 +38,26 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentAmmo;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float Damage = 10.0f;
+	
+	UPROPERTY(EditAnywhere , Category="Combat")
+	class UParticleSystem* MuzzleFlashFX;
+	
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	class USoundBase* FireSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	class USoundBase* ReloadSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<class UCameraShakeBase> FireCameraShake;
+
 public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
 	int32 GetMaxAmmo() const {return MaxAmmo;};
+	
+	void PlayReloadSound();
 	
 	void Reload();
 	

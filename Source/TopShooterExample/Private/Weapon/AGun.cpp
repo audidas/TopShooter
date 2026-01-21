@@ -5,6 +5,7 @@
 
 #include "Gameframework/TopDownPlayerController.h"
 #include "Projectile/BulletProjectile.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAGun::AAGun()
@@ -59,15 +60,66 @@ void AAGun::Attack()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
 		SpawnParams.Instigator = GetInstigator();
+
+		ABulletProjectile* Bullet = GetWorld()->SpawnActor<ABulletProjectile>(
+			ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 		
-		GetWorld()->SpawnActor<ABulletProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation,SpawnParams);
+		if (Bullet)
+		{
+			Bullet->Damage = this->Damage;
+		}
 		CurrentAmmo--;
+	}
+	
+	if (MuzzleFlashFX)
+	{
+		UGameplayStatics::SpawnEmitterAttached(
+			MuzzleFlashFX,
+			WeaponMesh,
+			TEXT("MuzzleSocket"),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::Type::SnapToTarget,
+			true
+		);
+	}
+	
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			GetActorLocation()
+			);
+	}
+	
+	if (FireCameraShake)
+	{
+		APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		
+		if (PC)
+		{
+			PC->ClientStartCameraShake(FireCameraShake,1.0f);
+		}
+	}
+}
+
+void AAGun::PlayReloadSound()
+{
+	if (ReloadSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+		this,
+		ReloadSound,
+		GetActorLocation()
+		);
 	}
 	
 }
 
 void AAGun::Reload()
 {
+
 	CurrentAmmo = MaxAmmo;
 }
 

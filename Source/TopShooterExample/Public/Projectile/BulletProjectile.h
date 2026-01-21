@@ -37,4 +37,15 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly , Category = "BulletProjectile")
 	UStaticMeshComponent* ProjectileMesh;
 	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	class UParticleSystem* ImpactFX;
+
+public:
+	float Damage = 0.0f;
+	
+protected:
+	
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	
 };
