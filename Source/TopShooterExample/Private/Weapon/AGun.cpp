@@ -83,10 +83,33 @@ void AAGun::Attack()
 			true
 		);
 	}
+	
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			GetActorLocation()
+			);
+	}
+}
+
+void AAGun::PlayReloadSound()
+{
+	if (ReloadSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+		this,
+		ReloadSound,
+		GetActorLocation()
+		);
+	}
+	
 }
 
 void AAGun::Reload()
 {
+
 	CurrentAmmo = MaxAmmo;
 }
 

@@ -210,6 +210,10 @@ void ATopShooterExampleCharacter::StartReload()
 	
 	if (bIsReloading || ! CurrentWeapon) return;
 	
+	if (AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon))
+	{
+		CurrentGun->PlayReloadSound();
+	}
 	bIsReloading = true;
 	
 	GetCharacterMovement()->MaxWalkSpeed =300.0f;

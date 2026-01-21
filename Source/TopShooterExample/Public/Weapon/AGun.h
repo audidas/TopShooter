@@ -43,10 +43,18 @@ protected:
 	
 	UPROPERTY(EditAnywhere , Category="Combat")
 	class UParticleSystem* MuzzleFlashFX;
+	
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	class USoundBase* FireSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	class USoundBase* ReloadSound;
 
 public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
 	int32 GetMaxAmmo() const {return MaxAmmo;};
+	
+	void PlayReloadSound();
 	
 	void Reload();
 	
