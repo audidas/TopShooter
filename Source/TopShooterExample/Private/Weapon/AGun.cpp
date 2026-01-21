@@ -59,8 +59,14 @@ void AAGun::Attack()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
 		SpawnParams.Instigator = GetInstigator();
+
+		ABulletProjectile* Bullet = GetWorld()->SpawnActor<ABulletProjectile>(
+			ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
 		
-		GetWorld()->SpawnActor<ABulletProjectile>(ProjectileClass, MuzzleLocation, MuzzleRotation,SpawnParams);
+		if (Bullet)
+		{
+			Bullet->Damage = this->Damage;
+		}
 		CurrentAmmo--;
 	}
 	

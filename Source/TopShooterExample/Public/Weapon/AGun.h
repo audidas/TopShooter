@@ -38,6 +38,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	int32 CurrentAmmo;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float Damage = 10.0f;
+
 public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
 	int32 GetMaxAmmo() const {return MaxAmmo;};

@@ -4,6 +4,7 @@
 #include "Projectile/BulletProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -24,8 +25,8 @@ ABulletProjectile::ABulletProjectile()
 	
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionSphereComponent;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->InitialSpeed = 1500.f;
+	ProjectileMovement->MaxSpeed = 1500.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
@@ -38,11 +39,33 @@ void ABulletProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CollisionSphereComponent->OnComponentHit.AddDynamic(this , &ABulletProjectile::OnHit);
 }
 
 // Called every frame
 void ABulletProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+	const FHitResult& Hit)
+{
+	if (OtherActor && OtherActor != this && OtherActor != GetOwner())
+	{
+		UGameplayStatics::ApplyPointDamage(
+		OtherActor,
+		Damage,
+		GetActorForwardVector(),
+		Hit,
+		GetInstigatorController(),
+		this,
+		UDamageType::StaticClass()
+		);
+		
+		Destroy();
+	}
+	
 }
 
