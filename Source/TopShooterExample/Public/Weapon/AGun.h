@@ -52,8 +52,27 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TSubclassOf<class UCameraShakeBase> FireCameraShake;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Recoil")
+	float CurrentSpread = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
+	float MinSpread = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
+	float MaxSpread = 5.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
+	float SpreadIncrease = 1.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
+	float SpreadRecoveryRate = 5.0f;
 
 public:
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	float GetCurrentSpread() const { return CurrentSpread; }
+	
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};
 	int32 GetMaxAmmo() const {return MaxAmmo;};
 	

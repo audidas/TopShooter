@@ -23,6 +23,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
 	float FixedFOV = 90.0f;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	float AimZoomFactor = 0.9f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
+	float ZoomInterpSpeed = 10.0f;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite , Category = "Camera|Pan")
+	float MaxPanDistance = 300.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera|Pan")
+	float PanInterpSpeed = 5.0f;
+	
 protected:
 	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
+	
+private:
+	FVector CurrentCameraOffset;
+	
+	FVector CurrentPanOffset = FVector::ZeroVector;
+	
+	bool bFirstFrame= true;
 };

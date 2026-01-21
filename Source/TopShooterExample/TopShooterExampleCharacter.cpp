@@ -74,7 +74,12 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		// Attack
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started , this , &ATopShooterExampleCharacter::Attack);
 		
+		// Reload
 		EnhancedInputComponent->BindAction(ReloadAction ,ETriggerEvent::Started , this , &ATopShooterExampleCharacter::StartReload );
+		
+		// Aiming
+		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Started ,this ,&ATopShooterExampleCharacter::StartAim);
+		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Completed ,this ,&ATopShooterExampleCharacter::StopAim);
 	}
 	else
 	{
@@ -242,4 +247,15 @@ void ATopShooterExampleCharacter::FinishReload()
 	{
 		CurrentGun->Reload();
 	}
+}
+
+void ATopShooterExampleCharacter::StartAim()
+{
+	bIsAiming = true;
+}
+
+void ATopShooterExampleCharacter::StopAim()
+{
+	bIsAiming = false;
+	
 }
