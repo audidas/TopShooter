@@ -57,6 +57,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* ReloadAction;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AimAction;
 
 public:
 
@@ -116,7 +118,7 @@ public:
 	UPROPERTY(EditDefaultsOnly , Category="Combat")
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 	
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	AWeapon* CurrentWeapon;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -135,7 +137,8 @@ public:
 protected:
 	bool bIsReloading= false;
 	
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
+	bool bIsAiming = false;
 	
 	void StartReload();
 	
@@ -144,6 +147,14 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	bool IsReloading() const {return bIsReloading;}
+	
+	UFUNCTION(BlueprintCallable)
+	bool IsAiming() const { return bIsAiming; }
+	
+	void StartAim();
+	
+	void StopAim();
+	
 	
 	
 };

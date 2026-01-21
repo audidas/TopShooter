@@ -26,6 +26,8 @@ void AAGun::BeginPlay()
 void AAGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, SpreadRecoveryRate);
 }
 
 void AAGun::Attack()
@@ -55,6 +57,13 @@ void AAGun::Attack()
 		FireDirection.Z = 0.0f;
 		FRotator MuzzleRotation = FireDirection.Rotation();
 		
+		FVector SpreadDirection = FMath::VRandCone(
+		MuzzleRotation.Vector(),
+		FMath::DegreesToRadians(CurrentSpread)
+		);
+		
+		FRotator FinalRotatation = SpreadDirection.Rotation();
+		
 		// 추후 탄퍼짐 
 		
 		FActorSpawnParameters SpawnParams;
@@ -62,7 +71,8 @@ void AAGun::Attack()
 		SpawnParams.Instigator = GetInstigator();
 
 		ABulletProjectile* Bullet = GetWorld()->SpawnActor<ABulletProjectile>(
-			ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParams);
+			ProjectileClass, MuzzleLocation, FinalRotatation, SpawnParams);
+		
 		
 		if (Bullet)
 		{
@@ -102,6 +112,9 @@ void AAGun::Attack()
 			PC->ClientStartCameraShake(FireCameraShake,1.0f);
 		}
 	}
+	
+	
+	CurrentSpread = FMath::Clamp(CurrentSpread + SpreadIncrease, MinSpread, MaxSpread);
 }
 
 void AAGun::PlayReloadSound()
