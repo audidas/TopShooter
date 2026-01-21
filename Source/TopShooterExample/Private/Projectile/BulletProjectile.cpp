@@ -64,8 +64,20 @@ void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 		UDamageType::StaticClass()
 		);
 		
+		if (ImpactFX)
+		{
+			FRotator EffectRotation = Hit.ImpactNormal.Rotation();
+			UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			ImpactFX,
+			Hit.ImpactPoint,
+			EffectRotation,
+			true
+			);
+		}
 		Destroy();
 	}
+	
 	
 }
 

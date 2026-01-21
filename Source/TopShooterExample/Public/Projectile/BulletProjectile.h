@@ -37,8 +37,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly , Category = "BulletProjectile")
 	UStaticMeshComponent* ProjectileMesh;
 	
-	
-	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	class UParticleSystem* ImpactFX;
+
 public:
 	float Damage = 0.0f;
 	

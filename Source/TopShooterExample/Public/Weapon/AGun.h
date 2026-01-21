@@ -40,6 +40,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float Damage = 10.0f;
+	
+	UPROPERTY(EditAnywhere , Category="Combat")
+	class UParticleSystem* MuzzleFlashFX;
 
 public:
 	int32 GetCurrentAmmo() const {return CurrentAmmo;};

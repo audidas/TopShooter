@@ -5,6 +5,7 @@
 
 #include "Gameframework/TopDownPlayerController.h"
 #include "Projectile/BulletProjectile.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAGun::AAGun()
@@ -70,6 +71,18 @@ void AAGun::Attack()
 		CurrentAmmo--;
 	}
 	
+	if (MuzzleFlashFX)
+	{
+		UGameplayStatics::SpawnEmitterAttached(
+			MuzzleFlashFX,
+			WeaponMesh,
+			TEXT("MuzzleSocket"),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::Type::SnapToTarget,
+			true
+		);
+	}
 }
 
 void AAGun::Reload()

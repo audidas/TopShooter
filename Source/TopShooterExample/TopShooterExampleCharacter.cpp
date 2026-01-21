@@ -72,7 +72,7 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
 		
 		// Attack
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered , this , &ATopShooterExampleCharacter::Attack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started , this , &ATopShooterExampleCharacter::Attack);
 		
 		EnhancedInputComponent->BindAction(ReloadAction ,ETriggerEvent::Started , this , &ATopShooterExampleCharacter::StartReload );
 	}
