@@ -50,7 +50,7 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 		
 		if (DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
 		{
-			float GunHeight = 90.0f;
+			float GunHeight = 85.0f;
 			if (FMath::IsNearlyZero(WorldDirection.Z)) return;
 			
 			float T = (GunHeight - WorldLocation.Z) / WorldDirection.Z;

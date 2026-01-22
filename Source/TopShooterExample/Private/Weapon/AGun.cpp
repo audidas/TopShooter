@@ -4,8 +4,12 @@
 #include "Weapon/AGun.h"
 
 #include "Gameframework/TopDownPlayerController.h"
+#include "TopShooterExampleCharacter.h"
 #include "Projectile/BulletProjectile.h"
 #include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
+#include "Gameframework/TopDownPlayerCameraManager.h"
+
 
 // Sets default values
 AAGun::AAGun()
@@ -27,7 +31,17 @@ void AAGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, SpreadRecoveryRate);
+	float CurrentRecoveryRate = HipFireRecoveryRate;
+	
+	if (ATopShooterExampleCharacter* MyChar = Cast<ATopShooterExampleCharacter>(GetOwner()))
+	{
+		if (MyChar->IsAiming())
+		{
+			CurrentRecoveryRate = AimingRecoveryRate;
+		}
+	}
+	
+	CurrentSpread = FMath::FInterpTo(CurrentSpread, MinSpread, DeltaTime, CurrentRecoveryRate);
 }
 
 void AAGun::Attack()
@@ -69,7 +83,7 @@ void AAGun::Attack()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
 		SpawnParams.Instigator = GetInstigator();
-
+		
 		ABulletProjectile* Bullet = GetWorld()->SpawnActor<ABulletProjectile>(
 			ProjectileClass, MuzzleLocation, FinalRotatation, SpawnParams);
 		
@@ -79,42 +93,38 @@ void AAGun::Attack()
 			Bullet->Damage = this->Damage;
 		}
 		CurrentAmmo--;
-	}
 	
-	if (MuzzleFlashFX)
-	{
-		UGameplayStatics::SpawnEmitterAttached(
-			MuzzleFlashFX,
-			WeaponMesh,
-			TEXT("MuzzleSocket"),
-			FVector::ZeroVector,
-			FRotator::ZeroRotator,
-			EAttachLocation::Type::SnapToTarget,
-			true
-		);
-	}
 	
-	if (FireSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			FireSound,
-			GetActorLocation()
-			);
-	}
-	
-	if (FireCameraShake)
-	{
-		APawn* OwnerPawn = Cast<APawn>(GetOwner());
-		
-		if (PC)
+		if (MuzzleFlashFX)
 		{
-			PC->ClientStartCameraShake(FireCameraShake,1.0f);
+			UGameplayStatics::SpawnEmitterAttached(
+				MuzzleFlashFX,
+				WeaponMesh,
+				TEXT("MuzzleSocket"),
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::Type::SnapToTarget,
+				true
+			);
 		}
+	
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				FireSound,
+				GetActorLocation()
+				);
+		}
+	
+		if (ATopDownPlayerCameraManager* CameraManager = Cast<ATopDownPlayerCameraManager>(PC->PlayerCameraManager))
+		{
+			FVector FireDir = (MouseLocation - MuzzleLocation).GetSafeNormal();
+			CameraManager->AddRecoil(FireDir, 60.0f);
+		}
+	
+		CurrentSpread = FMath::Clamp(CurrentSpread + SpreadIncrease, MinSpread, MaxSpread);
 	}
-	
-	
-	CurrentSpread = FMath::Clamp(CurrentSpread + SpreadIncrease, MinSpread, MaxSpread);
 }
 
 void AAGun::PlayReloadSound()

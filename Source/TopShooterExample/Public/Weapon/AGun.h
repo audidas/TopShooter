@@ -60,14 +60,16 @@ protected:
 	float MinSpread = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
-	float MaxSpread = 5.0f;
+	float MaxSpread = 10.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
 	float SpreadIncrease = 1.0f;
 	
+	UPROPERTY(EditAnywhere , BlueprintReadWrite, Category="Combat|Recoil")
+	float HipFireRecoveryRate = 5.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Recoil")
-	float SpreadRecoveryRate = 5.0f;
-
+	float AimingRecoveryRate = 9.0f;
 public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Combat")

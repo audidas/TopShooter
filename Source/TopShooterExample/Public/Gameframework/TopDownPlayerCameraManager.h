@@ -35,6 +35,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera|Pan")
 	float PanInterpSpeed = 5.0f;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera|Recoil")
+	float RecoilRecoverySpeed = 10.0f;
+	
+	void AddRecoil(FVector Direction, float Strength);
+	
 protected:
 	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
 	
@@ -44,4 +49,6 @@ private:
 	FVector CurrentPanOffset = FVector::ZeroVector;
 	
 	bool bFirstFrame= true;
+	
+	FVector CurrentRecoilOffset = FVector::ZeroVector;
 };
