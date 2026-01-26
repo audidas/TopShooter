@@ -140,6 +140,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
 	bool bIsAiming = false;
 	
+	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
+	void BP_OnReloadStart(float Duration);
+	
 	void StartReload();
 	
 	void FinishReload();
