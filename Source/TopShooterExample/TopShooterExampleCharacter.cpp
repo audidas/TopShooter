@@ -229,6 +229,7 @@ void ATopShooterExampleCharacter::StartReload()
 	{
 		Duration = PlayAnimMontage(ReloadMontage);
 	}
+	BP_OnReloadStart(Duration);
 	
 	FTimerHandle ReloadTimerHandle;
 	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
