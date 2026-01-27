@@ -25,14 +25,6 @@ class ATopShooterExampleCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
-
-	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
-	
 protected:
 
 	/** Jump Input Action */
@@ -104,12 +96,6 @@ public:
 
 public:
 
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
 	
 public:
 	UPROPERTY(EditDefaultsOnly)
@@ -158,7 +144,13 @@ public:
 	
 	void StopAim();
 	
+private:
+	UPROPERTY()
+	TArray<AActor*> OccludedActors;
 	
+	TMap<FName , TArray<AActor*>> BuildingGroupCache;
+	
+	void CheckOcclusion();
 	
 };
 
