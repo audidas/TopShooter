@@ -61,8 +61,8 @@ void ATopDownPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT,
 			RatioX = FMath::Clamp(RatioX, -1.0f, 1.0f);
 			RatioY = FMath::Clamp(RatioY, -1.0f, 1.0f);
 			
-			TargetPanOffset.X = RatioY * MaxPanDistance; 
-			TargetPanOffset.Y = -RatioX * MaxPanDistance;
+			TargetPanOffset.X = -RatioY * MaxPanDistance; 
+			TargetPanOffset.Y = RatioX * MaxPanDistance;
 		}
 	}
 	

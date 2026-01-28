@@ -327,7 +327,7 @@ void ATopShooterExampleCharacter::CheckOcclusion()
 	{
 		if (IsValid(NewActor) && !OccludedActors.Contains(NewActor))
 		{
-			IOCFadeInterface::Execute_SetFadeOpacity(NewActor, 0.2f);
+			IOCFadeInterface::Execute_SetFadeOpacity(NewActor, 0.03f);
 		}
 	}
 	OccludedActors = ActorsToHide;
