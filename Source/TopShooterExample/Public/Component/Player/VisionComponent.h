@@ -33,9 +33,11 @@ private:
 	
 	void UpdateVisionMesh(const TArray<FVector>& ViewPoints);
 	
+	void UpdateVisionFogManager();
+	
 public:
 	UPROPERTY(EditAnywhere, Category = "Vision")
-	float ViewRadius = 800.0f;
+	float ViewRadius = 3500.0f;
 	
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	float ViewAngleFOV = 90.0f;
@@ -51,4 +53,16 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	UMaterialInterface* VisionMaterial;
+	
+	UPROPERTY(EditAnywhere, Category = "FogOfWar")
+	UTextureRenderTarget2D* FogRenderTarget;
+	
+	UPROPERTY(EditAnywhere, Category = "FogOfWar")
+	UMaterialParameterCollection* FogMPC;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FogOfWar")
+	USceneCaptureComponent2D* FogCapture;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FogOfWar")
+	UStaticMeshComponent* SurroundMesh;
 };

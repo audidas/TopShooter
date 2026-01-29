@@ -3,6 +3,9 @@
 
 #include "Component/Player/VisionComponent.h"
 
+#include "Components/SceneCaptureComponent2D.h"
+#include "Kismet/KismetMaterialLibrary.h"
+
 
 // Sets default values for this component's properties
 UVisionComponent::UVisionComponent()
@@ -15,6 +18,19 @@ UVisionComponent::UVisionComponent()
 	VisionMesh->SetCastShadow(false); 
 	VisionMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// ...
+	SurroundMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SurroundMesh"));
+	SurroundMesh->SetCastShadow(false);
+	SurroundMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SurroundMesh->SetVisibleInSceneCaptureOnly(true); 
+	
+	FogCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("FogCapture"));
+
+	FogCapture->ProjectionType = ECameraProjectionMode::Orthographic;
+	FogCapture->OrthoWidth = 4000.0f;
+	
+
+	FogCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+	FogCapture->CompositeMode =ESceneCaptureCompositeMode::SCCM_Overwrite;
 }
 
 
@@ -24,9 +40,28 @@ void UVisionComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	if (GetOwner())
+	AActor* Owner = GetOwner();
+	if (Owner)
 	{
+		
 		VisionMesh->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		VisionMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
+		FogCapture->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		FogCapture->SetRelativeLocation(FVector(0.0f, 0.0f, 2000.0f));
+		VisionMesh->SetVisibleInSceneCaptureOnly(true);
+		FogCapture->SetAbsolute(false,true,false);
+		
+		FogCapture->SetWorldRotation(FRotator(-90.0f, 0.0f, -90.0f));
+		FogCapture->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
+		FogCapture->ShowOnlyComponents.Add(VisionMesh);
+		
+		SurroundMesh->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		SurroundMesh->SetRelativeScale3D(FVector(5.0f, 5.0f, 0.1f));
+		FogCapture->ShowOnlyComponents.Add(SurroundMesh);
+		if (FogRenderTarget)
+		{
+			FogCapture->TextureTarget = FogRenderTarget;
+		}
 	}
 	
 }
@@ -40,6 +75,7 @@ void UVisionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
 	PerformVisionScan();
+	UpdateVisionFogManager();
 	// ...
 }
 
@@ -115,6 +151,18 @@ void UVisionComponent::UpdateVisionMesh(const TArray<FVector>& ViewPoints)
 	if (VisionMaterial)
 	{
 		VisionMesh->SetMaterial(0, VisionMaterial);
+	}
+}
+
+void UVisionComponent::UpdateVisionFogManager()
+{
+	AActor* Owner = GetOwner();
+	if (Owner && FogMPC)
+	{
+		FVector PlayerPos = Owner->GetActorLocation();
+		UKismetMaterialLibrary::SetVectorParameterValue(this, FogMPC, FName("PlayerLocation"), FLinearColor(PlayerPos));
+		
+		UKismetMaterialLibrary::SetScalarParameterValue(this, FogMPC, FName("OrthoWidth"), FogCapture->OrthoWidth);
 	}
 }
 
