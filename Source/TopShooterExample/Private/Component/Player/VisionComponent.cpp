@@ -10,7 +10,10 @@ UVisionComponent::UVisionComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	VisionMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("VisionMesh"));
+	VisionMesh->bUseAsyncCooking = true;
+	VisionMesh->SetCastShadow(false); 
+	VisionMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// ...
 }
 
@@ -21,6 +24,10 @@ void UVisionComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+	if (GetOwner())
+	{
+		VisionMesh->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	}
 	
 }
 
@@ -43,13 +50,15 @@ void UVisionComponent::PerformVisionScan()
 	
 	FVector StartPos = Owner -> GetActorLocation();
 	FVector ForwardVector = Owner-> GetActorForwardVector();
-	
 	float HalfFOV = ViewAngleFOV * 0.5f;
 	float AngleStep = ViewAngleFOV / static_cast<float>(TraceResolution);
+	
+	TArray<FVector> ViewPoints;
+	ViewPoints.Add(FVector::ZeroVector);
+	
 	for (int32 i =0 ; i<=TraceResolution; i++)
 	{
 		float CurrentAngleDeg = -HalfFOV + (AngleStep * i);
-		
 		FVector Direction = ForwardVector.RotateAngleAxis(CurrentAngleDeg, FVector::UpVector);
 		FVector EndPos = StartPos + (Direction * ViewRadius);
 		
@@ -65,17 +74,47 @@ void UVisionComponent::PerformVisionScan()
 			QueryParams
 		);
 		
-		if (bShowDebugLines)
-		{
-			if (bHit)
-			{
-				DrawDebugLine(GetWorld(), StartPos, HitResult.Location, FColor::Red, false, -1.0f, 0, 1.0f);
-				DrawDebugPoint(GetWorld(), HitResult.Location, 5.0f, FColor::Red, false, -1.0f);
-			}else
-			{
-				DrawDebugLine(GetWorld(), StartPos, EndPos, FColor::Green, false, -1.0f, 0, 1.0f);
-			}
-		}
+		FVector HitPoint = bHit ? HitResult.Location : EndPos;
+		FVector LocalPoint = Owner->GetTransform().InverseTransformPosition(HitPoint);
+		LocalPoint.Z = 10.0f; 
+
+		ViewPoints.Add(LocalPoint);
+	}
+	UpdateVisionMesh(ViewPoints);
+}
+
+void UVisionComponent::UpdateVisionMesh(const TArray<FVector>& ViewPoints)
+{
+	if (ViewPoints.Num() < 3) return;
+
+	TArray<FVector> Vertices = ViewPoints;
+	TArray<int32> Triangles;
+	TArray<FVector> Normals;
+	TArray<FVector2D> UV0;
+	TArray<FProcMeshTangent> Tangents;
+	TArray<FLinearColor> Colors;
+	
+	for (int32 i = 1; i < Vertices.Num() - 1; i++)
+	{
+		Triangles.Add(0);
+		Triangles.Add(i+1);
+		Triangles.Add(i);
+	}
+	
+	VisionMesh->CreateMeshSection_LinearColor(
+		0, 
+		Vertices, 
+		Triangles, 
+		Normals, 
+		UV0, 
+		Colors, 
+		Tangents, 
+		false 
+	);
+	
+	if (VisionMaterial)
+	{
+		VisionMesh->SetMaterial(0, VisionMaterial);
 	}
 }
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "VisionComponent.generated.h"
 
 
@@ -30,6 +31,8 @@ public:
 private: 
 	void PerformVisionScan();
 	
+	void UpdateVisionMesh(const TArray<FVector>& ViewPoints);
+	
 public:
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	float ViewRadius = 800.0f;
@@ -42,4 +45,10 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	bool bShowDebugLines = true;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly , Category="Vision")
+	UProceduralMeshComponent* VisionMesh;
+	
+	UPROPERTY(EditAnywhere, Category = "Vision")
+	UMaterialInterface* VisionMaterial;
 };
