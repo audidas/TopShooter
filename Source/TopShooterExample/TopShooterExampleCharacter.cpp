@@ -13,6 +13,8 @@
 #include "TopShooterExample.h"
 #include "Blueprint/UserWidget.h"
 #include "Gameframework/TopDownPlayerController.h"
+#include "Interface/OCFadeInterface.h"
+#include "Kismet/GameplayStatics.h"
 #include "Projectile/BulletProjectile.h"
 #include "Weapon/AGun.h"
 #include "Weapon/Weapon.h"
@@ -39,18 +41,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f;
-	CameraBoom->bUsePawnControlRotation = false;
-
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false;
-
+	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -145,12 +136,13 @@ void ATopShooterExampleCharacter::Tick(float DeltaTime)
 	if (PC)
 	{
 		FVector TargetPoint = PC->GetCachedTargetLocation();
-		
 		TargetPoint.Z = GetActorLocation().Z;
 		FVector LookVector = TargetPoint - GetActorLocation();
 		FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
 		SetActorRotation(LookRotation);
 	}
+	
+	CheckOcclusion();
 }
 
 void ATopShooterExampleCharacter::Attack()
@@ -260,3 +252,84 @@ void ATopShooterExampleCharacter::StopAim()
 	bIsAiming = false;
 	
 }
+
+void ATopShooterExampleCharacter::CheckOcclusion()
+{
+	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
+	if (!PC|| !PC->PlayerCameraManager) return;
+	
+	
+	FVector CameraLoc = PC->PlayerCameraManager->GetCameraLocation();
+	FVector PlayerLoc = GetActorLocation();
+	
+	
+	TArray<FHitResult> OutHits; 
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	
+	GetWorld()->SweepMultiByChannel(OutHits, CameraLoc, PlayerLoc, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(40.0f), Params);
+	
+	TArray<AActor*> ActorsToHide;
+	
+	for (const FHitResult& Hit : OutHits)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (!HitActor || !HitActor->GetClass()->ImplementsInterface(UOCFadeInterface::StaticClass())) continue;
+		
+		FName GroupTag = NAME_None;
+		for (const FName& Tag : HitActor ->Tags)
+		{
+			if (Tag.ToString().StartsWith("Building_"))
+			{
+				GroupTag = Tag;
+				break;
+			}
+		}
+		
+		if ( GroupTag != NAME_None )
+		{
+			if (BuildingGroupCache.Contains(GroupTag))
+			{
+				TArray<AActor*>& CachedGroup = BuildingGroupCache[GroupTag];
+				for (AActor* Member : CachedGroup)
+				{
+					if (IsValid(Member)) ActorsToHide.AddUnique(Member);
+				}
+			}else
+			{
+				TArray<AActor*> FoundActors;
+				UGameplayStatics::GetAllActorsWithTag(GetWorld(), GroupTag, FoundActors);
+				TArray<AActor*> ValidMembers;
+				for (AActor* Member : FoundActors)
+				{
+					if (Member && Member->GetClass()->ImplementsInterface(UOCFadeInterface::StaticClass()))
+					{
+						ValidMembers.Add(Member);
+						ActorsToHide.AddUnique(Member);
+					}
+				}
+				BuildingGroupCache.Add(GroupTag, ValidMembers);
+			}
+		}else
+		{
+			ActorsToHide.AddUnique(HitActor);
+		}
+	}
+	for (AActor* OldActor : OccludedActors)
+	{
+		if (IsValid(OldActor) && !ActorsToHide.Contains(OldActor))
+		{
+			IOCFadeInterface::Execute_SetFadeOpacity(OldActor, 1.0f);
+		}
+	}
+	
+	for ( AActor* NewActor : ActorsToHide)
+	{
+		if (IsValid(NewActor) && !OccludedActors.Contains(NewActor))
+		{
+			IOCFadeInterface::Execute_SetFadeOpacity(NewActor, 0.03f);
+		}
+	}
+	OccludedActors = ActorsToHide;
+}
+

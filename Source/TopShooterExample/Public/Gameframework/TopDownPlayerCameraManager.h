@@ -18,7 +18,7 @@ class TOPSHOOTEREXAMPLE_API
 public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
-	FVector FixedCameraOffset = FVector(1000.f, 0.f, 1000.f);
+	FVector FixedCameraOffset = FVector(-800.f, -800.f, 1000.f);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Camera")
 	float FixedFOV = 90.0f;
