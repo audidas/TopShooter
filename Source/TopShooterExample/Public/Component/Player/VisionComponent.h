@@ -32,8 +32,7 @@ private:
 	void PerformVisionScan();
 	
 	void UpdateVisionMesh(const TArray<FVector>& ViewPoints);
-	
-	void UpdateVisionFogManager();
+
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Vision")
@@ -54,15 +53,22 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	UMaterialInterface* VisionMaterial;
 	
-	UPROPERTY(EditAnywhere, Category = "FogOfWar")
-	UTextureRenderTarget2D* FogRenderTarget;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
+	UStaticMeshComponent* SurroundRingMesh;
 	
-	UPROPERTY(EditAnywhere, Category = "FogOfWar")
-	UMaterialParameterCollection* FogMPC;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FogOfWar")
-	USceneCaptureComponent2D* FogCapture;
+	 /*Deprecate
+	 render -> light 방식으로 변경*/
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FogOfWar")
-	UStaticMeshComponent* SurroundMesh;
+	/*UPROPERTY(EditAnywhere, Category = "FogOfWar")
+	UTextureRenderTarget2D* FogRenderTarget;*/
+	
+	/*UPROPERTY(EditAnywhere, Category = "FogOfWar")
+	UMaterialParameterCollection* FogMPC;*/
+	
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FogOfWar")
+	USceneCaptureComponent2D* FogCapture;*/
+	
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FogOfWar")
+	UStaticMeshComponent* SurroundMesh;*/
 };

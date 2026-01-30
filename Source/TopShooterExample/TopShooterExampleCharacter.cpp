@@ -2,20 +2,19 @@
 
 #include "TopShooterExampleCharacter.h"
 #include "Engine/LocalPlayer.h"
-#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/SpotLightComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Interface/OCFadeInterface.h"
 #include "Kismet/GameplayStatics.h"
-#include "Projectile/BulletProjectile.h"
 #include "Weapon/AGun.h"
 #include "Weapon/Weapon.h"
 
@@ -44,6 +43,69 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	// 캐릭터 시야용 조명
+	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
+	FlashLight->SetupAttachment(GetMesh());
+	FlashLight->SetRelativeLocationAndRotation(FVector(25.f, 60.f, 140.f) , FRotator(0.f, 60.0f, 0.0f));
+	
+	// 캐릭터 앞 시야 조명
+	FlashLight->Intensity = 10.0f;
+	FlashLight->AttenuationRadius = 3500.0f;
+	FlashLight->OuterConeAngle = 45.0f;
+	FlashLight->InnerConeAngle = 45.0f;
+	FlashLight->bUseInverseSquaredFalloff = false;
+	FlashLight->LightFalloffExponent = 1.0f;
+	
+	FlashLight->SourceRadius =0.0f;
+	FlashLight->SoftSourceRadius=0.0f;
+	FlashLight->CastShadows = true;
+	
+	
+	
+	// 캐릭터 주변 조명
+	SurroundLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("SurroundLight"));
+	SurroundLight->SetupAttachment(RootComponent);
+	SurroundLight->SetRelativeLocation(FVector(0.f, 0.f, 140.f));
+	
+	SurroundLight->bUseInverseSquaredFalloff=false;
+	SurroundLight->Intensity = 10.0f;
+	SurroundLight->LightFalloffExponent = 1.0f;
+	SurroundLight->AttenuationRadius = 400.0f;
+	
+	SurroundLight->SourceRadius = 0.0f;
+	SurroundLight->SoftSourceRadius = 0.0f;
+	SurroundLight->CastShadows = false;
+	
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> LightFuncMatAsset(TEXT("/Game/Materials/Fog/M_FlashLight.M_FlashLight"));
+	if (LightFuncMatAsset.Succeeded())
+	{
+	FlashLight-> LightFunctionMaterial = LightFuncMatAsset.Object;
+	}
+	
+	if (GetMesh())
+	{
+		FLightingChannels Channels;
+		
+		Channels.bChannel0 = false;
+		Channels.bChannel1 = true;
+		Channels.bChannel2 = false;
+		GetMesh()->SetLightingChannels(Channels.bChannel0, Channels.bChannel1, Channels.bChannel2);
+		
+		FLightingChannels SurroundChannels;
+		SurroundChannels.bChannel0 = true;
+		SurroundChannels.bChannel1 = true;
+		SurroundChannels.bChannel2 = false;
+		
+		SurroundLight->SetLightingChannels(SurroundChannels.bChannel0, SurroundChannels.bChannel1, SurroundChannels.bChannel2);
+		
+		FLightingChannels FlashChannels;
+		FlashChannels.bChannel0 = true;
+		FlashChannels.bChannel1 = true; 
+		FlashChannels.bChannel2 = false;
+		FlashLight->SetLightingChannels(FlashChannels.bChannel0, FlashChannels.bChannel1, FlashChannels.bChannel2);
+	}
+	
 }
 
 void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

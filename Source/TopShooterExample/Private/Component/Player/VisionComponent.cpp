@@ -18,19 +18,16 @@ UVisionComponent::UVisionComponent()
 	VisionMesh->SetCastShadow(false); 
 	VisionMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// ...
-	SurroundMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SurroundMesh"));
-	SurroundMesh->SetCastShadow(false);
-	SurroundMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SurroundMesh->SetVisibleInSceneCaptureOnly(true); 
+	SurroundRingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SurroundRingMesh"));
+	SurroundRingMesh->SetCastShadow(false);
+	SurroundRingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	FogCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("FogCapture"));
-
-	FogCapture->ProjectionType = ECameraProjectionMode::Orthographic;
-	FogCapture->OrthoWidth = 4000.0f;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMeshAsset(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	
-
-	FogCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-	FogCapture->CompositeMode =ESceneCaptureCompositeMode::SCCM_Overwrite;
+	if (CylinderMeshAsset.Succeeded())
+	{
+		SurroundRingMesh->SetStaticMesh(CylinderMeshAsset.Object);
+	}
 }
 
 
@@ -43,25 +40,22 @@ void UVisionComponent::BeginPlay()
 	AActor* Owner = GetOwner();
 	if (Owner)
 	{
-		
+		if (VisionMesh)
+		{
 		VisionMesh->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		VisionMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
-		FogCapture->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		FogCapture->SetRelativeLocation(FVector(0.0f, 0.0f, 2000.0f));
 		VisionMesh->SetVisibleInSceneCaptureOnly(true);
-		FogCapture->SetAbsolute(false,true,false);
-		
-		FogCapture->SetWorldRotation(FRotator(-90.0f, 0.0f, -90.0f));
-		FogCapture->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
-		FogCapture->ShowOnlyComponents.Add(VisionMesh);
-		
-		SurroundMesh->AttachToComponent(Owner->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		SurroundMesh->SetRelativeScale3D(FVector(5.0f, 5.0f, 0.1f));
-		FogCapture->ShowOnlyComponents.Add(SurroundMesh);
-		if (FogRenderTarget)
-		{
-			FogCapture->TextureTarget = FogRenderTarget;
 		}
+		
+		if (SurroundRingMesh)
+		{
+			SurroundRingMesh->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			SurroundRingMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 2.0f));
+			SurroundRingMesh->SetRelativeScale3D(FVector(6.0f, 6.0f, 0.01f));
+			SurroundRingMesh->SetMaterial(0, VisionMaterial);
+			SurroundRingMesh->SetVisibleInSceneCaptureOnly(true);
+		}
+		
 	}
 	
 }
@@ -75,7 +69,7 @@ void UVisionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
 	PerformVisionScan();
-	UpdateVisionFogManager();
+
 	// ...
 }
 
@@ -154,15 +148,4 @@ void UVisionComponent::UpdateVisionMesh(const TArray<FVector>& ViewPoints)
 	}
 }
 
-void UVisionComponent::UpdateVisionFogManager()
-{
-	AActor* Owner = GetOwner();
-	if (Owner && FogMPC)
-	{
-		FVector PlayerPos = Owner->GetActorLocation();
-		UKismetMaterialLibrary::SetVectorParameterValue(this, FogMPC, FName("PlayerLocation"), FLinearColor(PlayerPos));
-		
-		UKismetMaterialLibrary::SetScalarParameterValue(this, FogMPC, FName("OrthoWidth"), FogCapture->OrthoWidth);
-	}
-}
 
