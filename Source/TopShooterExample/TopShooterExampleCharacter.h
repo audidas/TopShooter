@@ -11,6 +11,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+class  USpotLightComponent;
+class UPointLightComponent;
 
 class AWeapon;
 
@@ -119,6 +121,12 @@ public:
 	UPROPERTY()
 	UUserWidget* HUDWidget;
 	
+	// 시야용 조명
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision System")
+	USpotLightComponent* FlashLight;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision System")
+	UPointLightComponent* SurroundLight;
 
 protected:
 	bool bIsReloading= false;

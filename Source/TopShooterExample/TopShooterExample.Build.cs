@@ -18,7 +18,8 @@ public class TopShooterExample : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"GameplayCameras"
+			"GameplayCameras",
+			"ProceduralMeshComponent"
 		});
 		PrivateDependencyModuleNames.AddRange(new string[] { 	"Slate" , "SlateCore" });
 

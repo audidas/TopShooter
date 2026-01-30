@@ -9,10 +9,10 @@
 void ATopDownPlayerCameraManager::AddRecoil(FVector Direction, float Strength)
 {
 	
-	Direction.Normalize();
+	
 	
 	Direction.Z = 0.0f;
-	
+	Direction.Normalize();
 	CurrentRecoilOffset += Direction * Strength;
 }
 
@@ -58,11 +58,19 @@ void ATopDownPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT,
 			float RatioX = (MouseX - CenterX) / CenterX;
 			float RatioY = (MouseY - CenterY) / CenterY;
 			
+			if (FMath::Abs(RatioX) < 0.2f) RatioX = 0.0f;
+			if (FMath::Abs(RatioY) < 0.2f) RatioY = 0.0f;
+			
 			RatioX = FMath::Clamp(RatioX, -1.0f, 1.0f);
 			RatioY = FMath::Clamp(RatioY, -1.0f, 1.0f);
 			
-			TargetPanOffset.X = -RatioY * MaxPanDistance; 
-			TargetPanOffset.Y = RatioX * MaxPanDistance;
+			FVector CamDir = -CurrentCameraOffset;
+			CamDir.Z = 0.0f;
+			CamDir.Normalize();
+			
+			FVector CamRight = FVector::CrossProduct(FVector::UpVector, CamDir); 
+			CamRight.Normalize();
+			TargetPanOffset = (CamDir * -RatioY * MaxPanDistance) + (CamRight * RatioX * MaxPanDistance);
 		}
 	}
 	
