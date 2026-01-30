@@ -56,6 +56,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision")
 	UStaticMeshComponent* SurroundRingMesh;
 	
+protected:
+	UPROPERTY()
+	TSet<AActor*> LastVisibleActors;
 	
 	 /*Deprecate
 	 render -> light 방식으로 변경*/
