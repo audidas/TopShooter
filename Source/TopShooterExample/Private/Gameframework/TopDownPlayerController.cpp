@@ -43,14 +43,15 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	float MouseX , MouseY;
-	
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn) return;
 	if (GetMousePosition(MouseX, MouseY))
 	{
 		FVector WorldLocation , WorldDirection;
 		
 		if (DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
 		{
-			float GunHeight = 85.0f;
+			float GunHeight = MyPawn->GetActorLocation().Z + 85.0f;
 			if (FMath::IsNearlyZero(WorldDirection.Z)) return;
 			
 			float T = (GunHeight - WorldLocation.Z) / WorldDirection.Z;

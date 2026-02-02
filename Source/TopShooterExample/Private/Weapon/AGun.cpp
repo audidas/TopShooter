@@ -69,7 +69,8 @@ void AAGun::Attack()
 		DrawDebugSphere(GetWorld(), MouseLocation, 30.0f, 16, FColor::Red, false, 3.0f);
 		FVector FireDirection = MouseLocation - MuzzleLocation;
 		
-		
+		FireDirection.Z = 0.0f;
+		FireDirection.Normalize();
 		FRotator MuzzleRotation = FireDirection.Rotation();
 		
 		FVector SpreadDirection = FMath::VRandCone(
