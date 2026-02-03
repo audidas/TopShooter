@@ -33,7 +33,8 @@ private:
 	
 	FVector TargetLocation;
 	
-public : 
+public :
+	
 	FVector GetCachedTargetLocation() const {return TargetLocation;};
 	
 

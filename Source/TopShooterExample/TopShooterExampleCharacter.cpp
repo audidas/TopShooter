@@ -10,8 +10,10 @@
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
 #include "Blueprint/UserWidget.h"
+#include "Component/Utils/StatComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Engine/DamageEvents.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Interface/OCFadeInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -36,13 +38,16 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 600.f;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	// 캐릭터 스탯
+	StatComponent = CreateDefaultSubobject<UStatComponent>(TEXT("StatComponent"));
 	
 	// 캐릭터 시야용 조명
 	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
@@ -133,6 +138,9 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		// Aiming
 		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Started ,this ,&ATopShooterExampleCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Completed ,this ,&ATopShooterExampleCharacter::StopAim);
+		
+		// Sprint
+		EnhancedInputComponent->BindAction(SprintAction , ETriggerEvent::Started , this , &ATopShooterExampleCharacter::ToggleSprint);
 	}
 	else
 	{
@@ -180,6 +188,11 @@ void ATopShooterExampleCharacter::BeginPlay()
 		}
 	}
 	
+	if ( StatComponent)
+	{
+		StatComponent->bEnableStamina = true;
+	}
+	
 	if (HUDClass)
 	{
 		HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDClass);
@@ -205,6 +218,17 @@ void ATopShooterExampleCharacter::Tick(float DeltaTime)
 	}
 	
 	CheckOcclusion();
+	
+	if (bIsSprinting)
+	{
+		float Cost = SprintCostPerSec * DeltaTime;
+		bool bSuccess = StatComponent ->UseStamina(Cost);
+		if (!bSuccess)
+		{
+			ToggleSprint();
+		}
+	}
+	
 }
 
 void ATopShooterExampleCharacter::Attack()
@@ -264,18 +288,45 @@ void ATopShooterExampleCharacter::DoJumpEnd()
 	StopJumping();
 }
 
+float ATopShooterExampleCharacter::TakeDamage(float DamageAmount,
+	struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator,
+	                         DamageCauser);
+	
+	
+	FName HitBoneName = NAME_None;
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		HitBoneName = PointEvent->HitInfo.BoneName;
+	}
+	
+	if (StatComponent)
+	{
+		StatComponent->ApplyDamage(ActualDamage, HitBoneName);
+	}
+	return ActualDamage;
+}
+
 void ATopShooterExampleCharacter::StartReload()
 {
 	
 	if (bIsReloading || ! CurrentWeapon) return;
-	
+	if (bIsAiming) StopAim();
+	if (bIsSprinting) 
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed; 
+	}
 	if (AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon))
 	{
 		CurrentGun->PlayReloadSound();
 	}
 	bIsReloading = true;
 	
-	GetCharacterMovement()->MaxWalkSpeed =300.0f;
+	GetCharacterMovement()->MaxWalkSpeed = ReloadMoveSpeed;
 	
 	float Duration = 2.0f;
 	
@@ -285,7 +336,7 @@ void ATopShooterExampleCharacter::StartReload()
 	}
 	BP_OnReloadStart(Duration);
 	
-	FTimerHandle ReloadTimerHandle;
+	
 	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
 	
 	
@@ -295,7 +346,7 @@ void ATopShooterExampleCharacter::FinishReload()
 {
 	
 	bIsReloading = false;
-	GetCharacterMovement()->MaxWalkSpeed =600.0f;
+	GetCharacterMovement()->MaxWalkSpeed =DefaultMoveSpeed;
 	
 	AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon);
 	if (CurrentWeapon && CurrentGun)
@@ -304,15 +355,55 @@ void ATopShooterExampleCharacter::FinishReload()
 	}
 }
 
+void ATopShooterExampleCharacter::CancelReload()
+{
+	if (!bIsReloading) return;
+	if (ReloadMontage)
+	{
+		StopAnimMontage(ReloadMontage);
+	}
+	
+	bIsReloading = false;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
+	
+	// 나중에 UI 장전 bar 취소용
+}
+
+void ATopShooterExampleCharacter::ToggleSprint()
+{
+
+	if (bIsRolling || bIsReloading) return;
+	
+	if (bIsAiming)
+	{
+		StopAim();
+	}
+	bIsSprinting = !bIsSprinting;
+	
+	
+	GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintMoveSpeed : DefaultMoveSpeed;
+	
+}
+
 void ATopShooterExampleCharacter::StartAim()
 {
+	if (bIsReloading || bIsRolling) return;
+	
+	if (bIsSprinting)
+	{
+		bIsSprinting = false;
+	}
 	bIsAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed = AimMoveSpeed;
 }
 
 void ATopShooterExampleCharacter::StopAim()
 {
 	bIsAiming = false;
-	
+	if (!bIsSprinting)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
+	}
 }
 
 void ATopShooterExampleCharacter::CheckOcclusion()

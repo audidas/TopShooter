@@ -53,6 +53,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AimAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* SprintAction;
 
 public:
 
@@ -97,9 +100,13 @@ public:
 	virtual void DoJumpEnd();
 
 public:
+	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	
 public:
+	// 무기 관련
+	// ----------------------------------------------
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ABulletProjectile> BulletProjectileClass;
 	
@@ -114,6 +121,23 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* ReloadMontage;
+	// ----------------------------------------------
+	
+	// 이동속도
+	// ----------------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float DefaultMoveSpeed = 300.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float ReloadMoveSpeed = 150.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float SprintMoveSpeed = 600.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float AimMoveSpeed = 200.0f;
+	// ----------------------------------------------
+	
 	
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> HUDClass;
@@ -129,10 +153,19 @@ public:
 	UPointLightComponent* SurroundLight;
 
 protected:
+	
+	// 플레이어 스탯
+	UPROPERTY(EditDefaultsOnly)
+	class UStatComponent* StatComponent;
+	
+	// 장전 & 조준 
+	// --------------------------------------
 	bool bIsReloading= false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
 	bool bIsAiming = false;
+	
+	FTimerHandle ReloadTimerHandle;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
 	void BP_OnReloadStart(float Duration);
@@ -141,7 +174,22 @@ protected:
 	
 	void FinishReload();
 	
+	void CancelReload();
+	// --------------------------------------
+	
+	// 이동관련
+	// --------------------------------------
+	bool bIsSprinting = false;
+	
+	float SprintCostPerSec = 15.0f; 
+	
+	bool bIsRolling = false;
+
+	void ToggleSprint();
+	// --------------------------------------
 public:
+	// 장전 & 조준 
+	// --------------------------------------
 	UFUNCTION(BlueprintCallable)
 	bool IsReloading() const {return bIsReloading;}
 	
@@ -151,14 +199,18 @@ public:
 	void StartAim();
 	
 	void StopAim();
-	
+	// --------------------------------------
 private:
+	// 건물 시야 충돌 
+	// --------------------------------------
 	UPROPERTY()
 	TArray<AActor*> OccludedActors;
 	
 	TMap<FName , TArray<AActor*>> BuildingGroupCache;
 	
 	void CheckOcclusion();
+	
+	// --------------------------------------
 	
 };
 
