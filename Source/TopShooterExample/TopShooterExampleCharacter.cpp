@@ -339,7 +339,6 @@ void ATopShooterExampleCharacter::StartReload()
 	
 	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
 	
-	
 }
 
 void ATopShooterExampleCharacter::FinishReload()
