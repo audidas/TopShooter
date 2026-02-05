@@ -52,7 +52,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// 캐릭터 시야용 조명
 	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
 	FlashLight->SetupAttachment(GetMesh());
-	FlashLight->SetRelativeLocationAndRotation(FVector(25.f, 60.f, 140.f) , FRotator(0.f, 60.0f, 0.0f));
+	FlashLight->SetRelativeLocationAndRotation(FVector(-30.f, 70.f, 140.f) , FRotator(0.f, 70.0f, 0.0f));
 	
 	// 캐릭터 앞 시야 조명
 	FlashLight->Intensity = 10.0f;
@@ -141,6 +141,9 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		
 		// Sprint
 		EnhancedInputComponent->BindAction(SprintAction , ETriggerEvent::Started , this , &ATopShooterExampleCharacter::ToggleSprint);
+		
+		// Roll
+		EnhancedInputComponent->BindAction(RollAction, ETriggerEvent::Started ,this , & ATopShooterExampleCharacter::Roll);
 	}
 	else
 	{
@@ -191,6 +194,7 @@ void ATopShooterExampleCharacter::BeginPlay()
 	if ( StatComponent)
 	{
 		StatComponent->bEnableStamina = true;
+		StatComponent->SetComponentTickEnabled(true);
 	}
 	
 	if (HUDClass)
@@ -382,6 +386,58 @@ void ATopShooterExampleCharacter::ToggleSprint()
 	
 	GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintMoveSpeed : DefaultMoveSpeed;
 	
+}
+
+void ATopShooterExampleCharacter::Roll()
+{
+	if (bIsRolling) return;
+	
+	if (bIsReloading)
+	{
+		CancelReload();
+	}
+	if (bIsAiming)
+	{
+		StopAim();
+	}
+	
+	if (StatComponent && !StatComponent->UseStamina(RollStamina))
+	{
+		return;
+	}
+	bIsRolling = true;
+	bIsSprinting = false;
+	
+	FVector LaunchDir = GetLastMovementInputVector();
+	if (LaunchDir.IsNearlyZero())
+	{
+		SetActorRotation(LaunchDir.Rotation());
+	}
+	
+	if (RollMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(RollMontage);
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this ,&ATopShooterExampleCharacter::OnRollMontageEnded );
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
+		}
+	}
+	
+}
+
+void ATopShooterExampleCharacter::AnimNotify_RollImpulse()
+{
+	FVector ForwardDir = GetActorForwardVector();
+	LaunchCharacter(ForwardDir * 1500.0f, true, true);
+}
+
+void ATopShooterExampleCharacter::OnRollMontageEnded(UAnimMontage* Montage,
+                                                     bool bInterrupted)
+{
+	bIsRolling = false;
 }
 
 void ATopShooterExampleCharacter::StartAim()

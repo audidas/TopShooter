@@ -56,6 +56,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* SprintAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* RollAction;
 
 public:
 
@@ -123,7 +126,7 @@ public:
 	UAnimMontage* ReloadMontage;
 	// ----------------------------------------------
 	
-	// 이동속도
+	// 이동관련
 	// ----------------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Move")
 	float DefaultMoveSpeed = 300.0f;
@@ -136,6 +139,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Move")
 	float AimMoveSpeed = 200.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float RollStamina = 20.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Move")
+	UAnimMontage* RollMontage;
 	// ----------------------------------------------
 	
 	
@@ -186,6 +195,14 @@ protected:
 	bool bIsRolling = false;
 
 	void ToggleSprint();
+	
+	void Roll();
+	
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_RollImpulse();
+	
+	UFUNCTION()
+	void OnRollMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	// --------------------------------------
 public:
 	// 장전 & 조준 
