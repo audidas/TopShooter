@@ -158,6 +158,7 @@ void ATopShooterExampleCharacter::Move(const FInputActionValue& Value)
 
 	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
+	
 }
 
 void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
@@ -172,6 +173,10 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 void ATopShooterExampleCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	TopDownController = Cast<ATopDownPlayerController>(GetController());
+	DefaultBrakingDeceleration = GetCharacterMovement()->BrakingDecelerationWalking;
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
 	
 	if (DefaultWeaponClass)
 	{
@@ -211,14 +216,17 @@ void ATopShooterExampleCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
-	if (PC)
+	if (bIsRolling)
 	{
-		FVector TargetPoint = PC->GetCachedTargetLocation();
+		SetActorRotation(CachedRollRotation);
+	}else if (TopDownController)
+	{
+		FVector TargetPoint = TopDownController->GetCachedTargetLocation();
 		TargetPoint.Z = GetActorLocation().Z;
 		FVector LookVector = TargetPoint - GetActorLocation();
 		FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
 		SetActorRotation(LookRotation);
+		CachedRollRotation = LookRotation;
 	}
 	
 	CheckOcclusion();
@@ -251,11 +259,11 @@ void ATopShooterExampleCharacter::Attack()
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)
 {
-	ATopDownPlayerController* PlayerController = Cast<ATopDownPlayerController>(GetController());
-	if (PlayerController && PlayerController->PlayerCameraManager)
+	
+	if (TopDownController && TopDownController->PlayerCameraManager)
 	{
 		// find out which way is forward
-		const FRotator Rotation = PlayerController ->PlayerCameraManager->GetCameraRotation();
+		const FRotator Rotation = TopDownController ->PlayerCameraManager->GetCameraRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
@@ -268,6 +276,7 @@ void ATopShooterExampleCharacter::DoMove(float Right, float Forward)
 		AddMovementInput(ForwardDirection, Forward);
 		AddMovementInput(RightDirection, Right);
 	}
+	
 }
 
 void ATopShooterExampleCharacter::DoLook(float Yaw, float Pitch)
@@ -408,36 +417,27 @@ void ATopShooterExampleCharacter::Roll()
 	bIsRolling = true;
 	bIsSprinting = false;
 	
-	FVector LaunchDir = GetLastMovementInputVector();
-	if (LaunchDir.IsNearlyZero())
-	{
-		SetActorRotation(LaunchDir.Rotation());
-	}
-	
 	if (RollMontage)
 	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(RollMontage);
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this ,&ATopShooterExampleCharacter::OnRollMontageEnded );
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, RollMontage);
-		}
+			PlayAnimMontage(RollMontage);
 	}
 	
 }
 
 void ATopShooterExampleCharacter::AnimNotify_RollImpulse()
 {
-	FVector ForwardDir = GetActorForwardVector();
-	LaunchCharacter(ForwardDir * 1500.0f, true, true);
+	
+	FVector LaunchDir = GetActorForwardVector();
+	GetCharacterMovement()->GroundFriction = 0.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 0.0f;
+	LaunchCharacter(LaunchDir * 2500.0f, true, true);
 }
 
-void ATopShooterExampleCharacter::OnRollMontageEnded(UAnimMontage* Montage,
-                                                     bool bInterrupted)
+void ATopShooterExampleCharacter::OnRollMontageEnded()
 {
 	bIsRolling = false;
+	GetCharacterMovement()->GroundFriction = DefaultGroundFriction;
+	GetCharacterMovement()->BrakingDecelerationWalking = DefaultBrakingDeceleration;
 }
 
 void ATopShooterExampleCharacter::StartAim()
@@ -463,11 +463,11 @@ void ATopShooterExampleCharacter::StopAim()
 
 void ATopShooterExampleCharacter::CheckOcclusion()
 {
-	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
-	if (!PC|| !PC->PlayerCameraManager) return;
+	
+	if (!TopDownController|| !TopDownController->PlayerCameraManager) return;
 	
 	
-	FVector CameraLoc = PC->PlayerCameraManager->GetCameraLocation();
+	FVector CameraLoc = TopDownController->PlayerCameraManager->GetCameraLocation();
 	FVector PlayerLoc = GetActorLocation();
 	
 	

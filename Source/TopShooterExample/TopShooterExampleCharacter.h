@@ -89,7 +89,7 @@ public:
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
-
+	
 	/** Handles look inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoLook(float Yaw, float Pitch);
@@ -101,6 +101,7 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
 
 public:
 	
@@ -163,6 +164,13 @@ public:
 
 protected:
 	
+	// 컨트롤러
+	// -------------------------------------
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	class ATopDownPlayerController* TopDownController;
+	
+	// -------------------------------------
+	
 	// 플레이어 스탯
 	UPROPERTY(EditDefaultsOnly)
 	class UStatComponent* StatComponent;
@@ -187,12 +195,20 @@ protected:
 	// --------------------------------------
 	
 	// 이동관련
+	
 	// --------------------------------------
+	
+	FRotator CachedRollRotation;
+	
 	bool bIsSprinting = false;
 	
 	float SprintCostPerSec = 15.0f; 
 	
 	bool bIsRolling = false;
+	
+	float DefaultGroundFriction;
+	
+	float DefaultBrakingDeceleration;
 
 	void ToggleSprint();
 	
@@ -201,8 +217,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void AnimNotify_RollImpulse();
 	
-	UFUNCTION()
-	void OnRollMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	UFUNCTION(BlueprintCallable)
+	void OnRollMontageEnded();
 	// --------------------------------------
 public:
 	// 장전 & 조준 

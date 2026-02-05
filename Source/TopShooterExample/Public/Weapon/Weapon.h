@@ -29,4 +29,6 @@ protected:
 	
 public:
 	virtual void Attack();
+	
+	virtual void AIAttack(AActor* TargetActor);
 };

@@ -32,3 +32,7 @@ void AWeapon::Attack()
 {
 }
 
+void AWeapon::AIAttack(AActor* TargetActor)
+{
+}
+

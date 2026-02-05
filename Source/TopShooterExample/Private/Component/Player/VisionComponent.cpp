@@ -48,78 +48,91 @@ void UVisionComponent::PerformVisionScan()
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
-	
-	FVector StartPos = Owner -> GetActorLocation();
-	FVector ForwardVector = Owner-> GetActorForwardVector();
-	float HalfFOV = ViewAngleFOV * 0.5f;
-	float AngleStep = ViewAngleFOV / static_cast<float>(TraceResolution);
+
+	FVector StartPos = Owner->GetActorLocation();
+	FVector ForwardVector = Owner->GetActorForwardVector();
 	
 	TSet<AActor*> CurrentVisibleActors;
 	
 	float SurroundRadius = 350.0f;
 	TArray<FOverlapResult> OverlapResults;
 	FCollisionShape CollisionShape;
-	CollisionShape.SetSphere(SurroundRadius);
+	CollisionShape.SetSphere(ViewRadius);
 	
+	FCollisionQueryParams QueryParams(NAME_None, false, Owner);
 	bool bOverlap = GetWorld()->OverlapMultiByChannel(
-		OverlapResults,
-		StartPos,
-		FQuat::Identity,
-		ECC_Visibility, 
-		CollisionShape,
-		FCollisionQueryParams(NAME_None, false, Owner)
-	);
-	
-	if (bOverlap)
-	{
-		for (const FOverlapResult Result : OverlapResults)
-		{
-			AActor* OverlapActor = Result.GetActor();
-			if (OverlapActor && OverlapActor->ActorHasTag(TEXT("Enemy")))
-			{
-				CurrentVisibleActors.Add(OverlapActor);
-				OverlapActor->SetActorHiddenInGame(false);
-			}
-		}
-	}
-	
-	for (int32 i =0 ; i<=TraceResolution; i++)
-	{
-		float CurrentAngleDeg = -HalfFOV + (AngleStep * i);
-		FVector Direction = ForwardVector.RotateAngleAxis(CurrentAngleDeg, FVector::UpVector);
-		FVector EndPos = StartPos + (Direction * ViewRadius);
-		
-		FHitResult HitResult;
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(Owner);
-		
-		bool bHit = GetWorld()->LineTraceSingleByChannel(
-			HitResult,
+			OverlapResults,
 			StartPos,
-			EndPos,
-			ECC_Visibility,
+			FQuat::Identity,
+			ECC_Pawn, 
+			CollisionShape,
 			QueryParams
 		);
-		if (bHit && HitResult.GetActor())
-		{
-			AActor* HitActor = HitResult.GetActor();
-			if (HitActor->ActorHasTag(TEXT("Enemy")))
-			{
-				CurrentVisibleActors.Add(HitActor);
-				HitActor->SetActorHiddenInGame(false);
-			}
-		}
-		
-	}
 	
-	for (AActor* OldActor : LastVisibleActors)
-	{
-		if (IsValid(OldActor) && !CurrentVisibleActors.Contains(OldActor))
-		{
-			OldActor->SetActorHiddenInGame(true);
-		}
-	}
-	LastVisibleActors = CurrentVisibleActors;
+if (bOverlap)
+    {
+        for (const FOverlapResult& Result : OverlapResults)
+        {
+            AActor* TargetActor = Result.GetActor();
+        	
+            if (!TargetActor || !TargetActor->ActorHasTag(TEXT("Enemy"))) continue;
+
+            FVector TargetPos = TargetActor->GetActorLocation();
+            FVector DirToTarget = (TargetPos - StartPos);
+            float DistanceToTarget = DirToTarget.Size();
+            DirToTarget.Normalize();
+
+            bool bIsVisible = false;
+        	
+            if (DistanceToTarget <= SurroundRadius)
+            {
+                bIsVisible = true;
+            }
+           
+            else 
+            {
+                float DotProduct = FVector::DotProduct(ForwardVector, DirToTarget);
+                float AngleThreshold = FMath::Cos(FMath::DegreesToRadians(ViewAngleFOV * 0.5f));
+
+                if (DotProduct >= AngleThreshold)
+                {
+                    FHitResult WallHit;
+                    bool bHitWall = GetWorld()->LineTraceSingleByChannel(
+                        WallHit,
+                        StartPos,
+                        TargetPos, 
+                        ECC_Visibility,
+                        QueryParams
+                    );
+
+  
+                    if (!bHitWall || WallHit.GetActor() == TargetActor)
+                    {
+                        bIsVisible = true;
+                    }
+                }
+            	
+            }
+        	
+            if (bIsVisible)
+            {
+                CurrentVisibleActors.Add(TargetActor);
+                TargetActor->SetActorHiddenInGame(false);
+            }
+        }
+    }
+
+    
+    for (AActor* OldActor : LastVisibleActors)
+    {
+        if (IsValid(OldActor) && !CurrentVisibleActors.Contains(OldActor))
+        {
+            OldActor->SetActorHiddenInGame(true);
+        }
+    }
+
+ 
+    LastVisibleActors = CurrentVisibleActors;
 }
 
 
