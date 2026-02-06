@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NiagaraComponent.h"
 #include "BulletProjectile.generated.h"
 
 class USphereComponent;
@@ -28,6 +29,9 @@ public:
 	
 protected:
 	
+	UPROPERTY(VisibleDefaultsOnly, Category="BulletProjectile")
+	UNiagaraComponent* NiagaraBulletComponent;
+	
 	UPROPERTY(VisibleDefaultsOnly , Category="BulletProjectile")
 	USphereComponent* CollisionSphereComponent;
 	
@@ -39,6 +43,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	class UParticleSystem* ImpactFX;
+	
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UNiagaraSystem* NiagaraImpactFX;
 
 public:
 	float Damage = 0.0f;

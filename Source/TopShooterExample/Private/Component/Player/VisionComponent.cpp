@@ -93,9 +93,14 @@ if (bOverlap)
             {
                 float DotProduct = FVector::DotProduct(ForwardVector, DirToTarget);
                 float AngleThreshold = FMath::Cos(FMath::DegreesToRadians(ViewAngleFOV * 0.5f));
-
+				
+            	
+            	
                 if (DotProduct >= AngleThreshold)
                 {
+                	FVector EyeStart  =StartPos + FVector(0.0f, 0.0f, 45.0f);
+                	FVector EyeEnd    =TargetActor->GetActorLocation() + FVector(0, 0, 45.0f);
+                	
                     FHitResult WallHit;
                     bool bHitWall = GetWorld()->LineTraceSingleByChannel(
                         WallHit,

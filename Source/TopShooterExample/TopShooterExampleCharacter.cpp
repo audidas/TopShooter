@@ -80,7 +80,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	
 	SurroundLight->SourceRadius = 0.0f;
 	SurroundLight->SoftSourceRadius = 0.0f;
-	SurroundLight->CastShadows = false;
+	SurroundLight->CastShadows = true;
 	
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> LightFuncMatAsset(TEXT("/Game/Materials/Fog/M_FlashLight.M_FlashLight"));
 	if (LightFuncMatAsset.Succeeded())
@@ -92,7 +92,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	{
 		FLightingChannels Channels;
 		
-		Channels.bChannel0 = false;
+		Channels.bChannel0 = true;
 		Channels.bChannel1 = true;
 		Channels.bChannel2 = false;
 		GetMesh()->SetLightingChannels(Channels.bChannel0, Channels.bChannel1, Channels.bChannel2);

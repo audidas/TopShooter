@@ -30,6 +30,22 @@ public:
 		class UInputComponent* PlayerInputComponent) override;
 	
 	
+public:
+	// 무기
+	// --------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<class AWeapon> StartingWeaponClass;
+	
+	void SpawnDefaultWeapon();
+	void FireWeapon(AActor* Target);
+	// --------------------------------------
+	
+protected:
+	// 무기
+	// --------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	class AWeapon* CurrentWeapon;
+	// --------------------------------------
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

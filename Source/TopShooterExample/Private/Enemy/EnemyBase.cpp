@@ -3,10 +3,12 @@
 
 #include "Enemy/EnemyBase.h"
 
+#include "GenericTeamAgentInterface.h"
 #include "Component/Utils/StatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapon/Weapon.h"
 
 
 // Sets default values
@@ -20,6 +22,10 @@ AEnemyBase::AEnemyBase()
 	// 메쉬설정 이상하면 제거 아니면 bp마다 설정
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -88.f));
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
 	GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
@@ -39,6 +45,8 @@ void AEnemyBase::BeginPlay()
 		StatComponent->OnZeroHealth.AddDynamic(this,&AEnemyBase::OnEnemyZeroHealth );
 	}
 	
+	SpawnDefaultWeapon();
+	
 }
 
 // Called every frame
@@ -53,6 +61,20 @@ float AEnemyBase::TakeDamage(float DamageAmount,
 {
 	if (bIsDead) return 0.0f;
 	
+	if (EventInstigator && GetController())
+	{
+		IGenericTeamAgentInterface* MyTeamAgent =Cast<IGenericTeamAgentInterface>(GetController());
+		IGenericTeamAgentInterface* AttackerTeamAgent = Cast<IGenericTeamAgentInterface>(EventInstigator);
+		
+		if ( MyTeamAgent && AttackerTeamAgent)
+		{
+			if (MyTeamAgent -> GetGenericTeamId()==AttackerTeamAgent->GetGenericTeamId())
+			{
+				return 0.0f;
+			}
+		}
+	}
+	
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator,
 	                         DamageCauser);
 	
@@ -63,6 +85,7 @@ float AEnemyBase::TakeDamage(float DamageAmount,
 		HitBoneName = PointDamageEvent->HitInfo.BoneName;
 		if (HitBoneName.ToString().Contains(TEXT("head"), ESearchCase::IgnoreCase))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("headshot"));
 			ActualDamage *=1.5f;
 		}
 	}
@@ -81,6 +104,31 @@ void AEnemyBase::SetupPlayerInputComponent(
 	UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
+
+void AEnemyBase::SpawnDefaultWeapon()
+{
+	if (StartingWeaponClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = this;
+		
+		CurrentWeapon = GetWorld()->SpawnActor<AWeapon>(StartingWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		if (CurrentWeapon)
+		{
+			CurrentWeapon -> AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+		}
+	}
+	
+}
+
+void AEnemyBase::FireWeapon(AActor* Target)
+{
+	if (CurrentWeapon && Target)
+	{
+		CurrentWeapon->AIAttack(Target);
+	}
 }
 
 void AEnemyBase::Die()
