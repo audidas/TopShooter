@@ -13,7 +13,9 @@
 #include "Component/Utils/StatComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Engine/DamageEvents.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Interface/OCFadeInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -111,6 +113,35 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 		FlashLight->SetLightingChannels(FlashChannels.bChannel0, FlashChannels.bChannel1, FlashChannels.bChannel2);
 	}
 	
+	
+	// 체력 UI
+	HealthWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidgetComp"));
+	HealthWidgetComp->SetupAttachment(GetRootComponent());
+	HealthWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthWidgetComp->SetDrawAtDesiredSize(true);
+	
+	
+	StaminaWidgetArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("StaminaWidgetArm"));
+	StaminaWidgetArm->SetupAttachment(RootComponent);
+	StaminaWidgetArm->TargetArmLength = 0.0f;
+	
+	StaminaWidgetArm->bInheritPitch = false;
+	StaminaWidgetArm->bInheritYaw = false;
+	StaminaWidgetArm->bInheritRoll = false;
+	
+	// 스태미나 UI
+	StaminaWidgetComp= CreateDefaultSubobject<UWidgetComponent>(TEXT("StaminaWidgetComp"));
+	if (StaminaWidgetArm)
+	{
+	StaminaWidgetComp->SetupAttachment(StaminaWidgetArm);
+	}else
+	{
+		StaminaWidgetComp->SetupAttachment(RootComponent);
+	}
+	StaminaWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	StaminaWidgetComp->SetDrawAtDesiredSize(true);
+	
+	StaminaWidgetArm->SetRelativeLocation(FVector(0.f, -130.f, -20.f));
 }
 
 void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -200,6 +231,7 @@ void ATopShooterExampleCharacter::BeginPlay()
 	{
 		StatComponent->bEnableStamina = true;
 		StatComponent->SetComponentTickEnabled(true);
+		StatComponent->OnZeroHealth.AddDynamic(this,&ATopShooterExampleCharacter::OnPlayerZeroHealth);
 	}
 	
 	if (HUDClass)
@@ -224,9 +256,11 @@ void ATopShooterExampleCharacter::Tick(float DeltaTime)
 		FVector TargetPoint = TopDownController->GetCachedTargetLocation();
 		TargetPoint.Z = GetActorLocation().Z;
 		FVector LookVector = TargetPoint - GetActorLocation();
-		FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
-		SetActorRotation(LookRotation);
-		CachedRollRotation = LookRotation;
+		if (LookVector.SizeSquared() > 100.0f) 
+		{
+			FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
+			SetActorRotation(LookRotation);
+		}
 	}
 	
 	CheckOcclusion();
@@ -410,6 +444,21 @@ void ATopShooterExampleCharacter::Roll()
 	{
 		return;
 	}
+	FVector InputDir = GetCharacterMovement()->GetLastInputVector();
+	FRotator NewRollRotation;
+	if (InputDir.SizeSquared() > 0.01f)
+	{
+		NewRollRotation = InputDir.Rotation();
+	}else
+	{
+		
+		NewRollRotation = GetActorRotation();
+		
+	}
+	
+	CachedRollRotation = NewRollRotation; 
+	SetActorRotation(CachedRollRotation);
+	
 	bIsRolling = true;
 	bIsSprinting = false;
 	
@@ -434,6 +483,23 @@ void ATopShooterExampleCharacter::OnRollMontageEnded()
 	bIsRolling = false;
 	GetCharacterMovement()->GroundFriction = DefaultGroundFriction;
 	GetCharacterMovement()->BrakingDecelerationWalking = DefaultBrakingDeceleration;
+}
+
+void ATopShooterExampleCharacter::OnPlayerZeroHealth()
+{
+
+	Die();
+}
+
+void ATopShooterExampleCharacter::Die()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+	DetachFromControllerPendingDestroy();
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	GetMesh()->SetCollisionProfileName(TEXT("PhysicsActor"));
+	GetMesh()->SetSimulatePhysics(true);
 }
 
 void ATopShooterExampleCharacter::StartAim()

@@ -160,6 +160,17 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision System")
 	UPointLightComponent* SurroundLight;
+	
+	// Stat UI
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* HealthWidgetComp;
+	
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class USpringArmComponent* StaminaWidgetArm;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* StaminaWidgetComp;
 
 protected:
 	
@@ -171,7 +182,7 @@ protected:
 	// -------------------------------------
 	
 	// 플레이어 스탯
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UStatComponent* StatComponent;
 	
 	// 장전 & 조준 
@@ -219,6 +230,16 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnRollMontageEnded();
 	// --------------------------------------
+	
+	// 사망
+	// --------------------------------------
+	UFUNCTION()
+	void OnPlayerZeroHealth();
+	
+	virtual void Die();
+	
+	bool bIsDead = false;
+	//
 public:
 	// 장전 & 조준 
 	// --------------------------------------

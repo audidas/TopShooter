@@ -43,6 +43,10 @@ public:
 	class AWeapon* CurrentWeapon;
 	// --------------------------------------
 	
+	// Widget
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* HealthWidgetComp;
+	
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

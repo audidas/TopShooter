@@ -131,6 +131,9 @@ bool UStatComponent::UseStamina(float Cost)
 		LastStaminaUseTime = GetWorld()->GetTimeSeconds();
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 		return true;
+	}else if (CurrentStamina< Cost)
+	{
+		return false;
 	}
 	
 	if (CurrentStamina > 0.0f)

@@ -6,6 +6,7 @@
 #include "GenericTeamAgentInterface.h"
 #include "Component/Utils/StatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Weapon/Weapon.h"
@@ -33,6 +34,11 @@ AEnemyBase::AEnemyBase()
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 600.f, 0.f);
+	
+	HealthWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidgetComp"));
+	HealthWidgetComp->SetupAttachment(GetRootComponent());
+	HealthWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthWidgetComp->SetDrawAtDesiredSize(true);
 }
 
 // Called when the game starts or when spawned
@@ -42,6 +48,7 @@ void AEnemyBase::BeginPlay()
 	
 	if (StatComponent)
 	{
+		StatComponent->SetComponentTickEnabled(false);
 		StatComponent->OnZeroHealth.AddDynamic(this,&AEnemyBase::OnEnemyZeroHealth );
 	}
 	
@@ -85,7 +92,6 @@ float AEnemyBase::TakeDamage(float DamageAmount,
 		HitBoneName = PointDamageEvent->HitInfo.BoneName;
 		if (HitBoneName.ToString().Contains(TEXT("head"), ESearchCase::IgnoreCase))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("headshot"));
 			ActualDamage *=1.5f;
 		}
 	}
@@ -134,10 +140,11 @@ void AEnemyBase::FireWeapon(AActor* Target)
 void AEnemyBase::Die()
 {
 	if (bIsDead) return;
+	bIsDead = true;
 	DetachFromControllerPendingDestroy();
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetCollisionProfileName(TEXT("PhysicsActor"));
 	GetMesh()->SetSimulatePhysics(true);
 	
 	SetLifeSpan(5.0f);
