@@ -82,6 +82,7 @@ protected:
 	
 	virtual void Tick(float DeltaTime) override;
 	
+	
 	void Attack();
 
 public:
@@ -120,8 +121,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	AWeapon* CurrentWeapon;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	UAnimMontage* FireMontage;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* ReloadMontage;

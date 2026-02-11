@@ -52,18 +52,18 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// 캐릭터 시야용 조명
 	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
 	FlashLight->SetupAttachment(GetMesh());
-	FlashLight->SetRelativeLocationAndRotation(FVector(-30.f, 70.f, 140.f) , FRotator(0.f, 70.0f, 0.0f));
+	FlashLight->SetRelativeLocationAndRotation(FVector(70.f, 60.f, 140.f) , FRotator(0.f, 30.0f, 0.0f));
 	
 	// 캐릭터 앞 시야 조명
 	FlashLight->Intensity = 10.0f;
 	FlashLight->AttenuationRadius = 3500.0f;
 	FlashLight->OuterConeAngle = 45.0f;
-	FlashLight->InnerConeAngle = 45.0f;
+	FlashLight->InnerConeAngle = 20.0f;
 	FlashLight->bUseInverseSquaredFalloff = false;
 	FlashLight->LightFalloffExponent = 1.0f;
 	
-	FlashLight->SourceRadius =0.0f;
-	FlashLight->SoftSourceRadius=0.0f;
+	FlashLight->SourceRadius =10.0f;
+	FlashLight->SoftSourceRadius=10.0f;
 	FlashLight->CastShadows = true;
 	
 	
@@ -74,12 +74,12 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	SurroundLight->SetRelativeLocation(FVector(0.f, 0.f, 140.f));
 	
 	SurroundLight->bUseInverseSquaredFalloff=false;
-	SurroundLight->Intensity = 10.0f;
+	SurroundLight->Intensity = 7.0f;
 	SurroundLight->LightFalloffExponent = 1.0f;
 	SurroundLight->AttenuationRadius = 400.0f;
 	
-	SurroundLight->SourceRadius = 0.0f;
-	SurroundLight->SoftSourceRadius = 0.0f;
+	SurroundLight->SourceRadius = 10.0f;
+	SurroundLight->SoftSourceRadius = 10.0f;
 	SurroundLight->CastShadows = true;
 	
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> LightFuncMatAsset(TEXT("/Game/Materials/Fog/M_FlashLight.M_FlashLight"));
@@ -127,7 +127,7 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
+		// EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
 		
 		// Attack
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started , this , &ATopShooterExampleCharacter::Attack);
@@ -251,10 +251,6 @@ void ATopShooterExampleCharacter::Attack()
 		CurrentWeapon->Attack();
 	}
 	
-	if (FireMontage)
-	{
-		PlayAnimMontage(FireMontage);
-	}
 }
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)

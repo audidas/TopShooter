@@ -6,6 +6,17 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EWeaponType: uint8
+{
+	Unknown UMETA(DisplayName = "Unknown"),
+	Rifle UMETA(DisplayName = "Rifle"),
+	Pistol UMETA(DisplayName="Pistol"),
+	Knife UMETA(DisplayName="Knife"),
+	Max UMETA(Hidden)
+};
+
 UCLASS()
 class TOPSHOOTEREXAMPLE_API AWeapon : public AActor
 {
@@ -28,7 +39,16 @@ protected:
 	UStaticMeshComponent* WeaponMesh;
 	
 public:
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon Properties")
+	EWeaponType WeaponType = EWeaponType::Unknown;
+	
+	void PlayAttackAnimation();
+	
 	virtual void Attack();
 	
 	virtual void AIAttack(AActor* TargetActor);
+	
+	UPROPERTY(EditDefaultsOnly, Category="Animation")
+	UAnimMontage* AttackMontage;
 };

@@ -47,6 +47,11 @@ void AAGun::Tick(float DeltaTime)
 
 void AAGun::Attack()
 {
+	if (CurrentAmmo <= 0)
+	{
+		return;
+	}
+	
 	Super::Attack();
 	
 	APawn* Pawn = Cast<APawn>(GetOwner());
@@ -99,6 +104,7 @@ void AAGun::Attack()
 
 void AAGun::AIAttack(AActor* TargetActor)
 {
+	Super::Attack();
 	
 	if (!TargetActor) return;
 	CurrentSpread =MinSpread;

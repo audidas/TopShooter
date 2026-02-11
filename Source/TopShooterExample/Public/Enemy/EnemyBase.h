@@ -38,15 +38,12 @@ public:
 	
 	void SpawnDefaultWeapon();
 	void FireWeapon(AActor* Target);
-	// --------------------------------------
 	
-protected:
-	// 무기
-	// --------------------------------------
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	class AWeapon* CurrentWeapon;
 	// --------------------------------------
 	
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UStatComponent* StatComponent;

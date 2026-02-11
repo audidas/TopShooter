@@ -3,6 +3,8 @@
 
 #include "Weapon/Weapon.h"
 
+#include "GameFramework/Character.h"
+
 
 // Sets default values
 AWeapon::AWeapon()
@@ -28,11 +30,29 @@ void AWeapon::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AWeapon::PlayAttackAnimation()
+{
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	
+	if (OwnerCharacter && AttackMontage)
+	{	
+		UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+		if (AnimInstance && !AnimInstance->Montage_IsPlaying(AttackMontage))
+		{
+			OwnerCharacter->PlayAnimMontage(AttackMontage);
+		}
+	}
+}
+
 void AWeapon::Attack()
 {
+PlayAttackAnimation();
 }
 
 void AWeapon::AIAttack(AActor* TargetActor)
 {
+	
+PlayAttackAnimation();
+	
 }
 
