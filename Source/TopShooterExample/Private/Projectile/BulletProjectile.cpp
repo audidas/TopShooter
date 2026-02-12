@@ -67,15 +67,13 @@ void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 		if (NiagaraImpactFX)
 		{
 			FRotator EffectRotation = Hit.ImpactNormal.Rotation();
-			UE_LOG(LogTemp , Warning , TEXT("맞음"));
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
 			NiagaraImpactFX,
 			Hit.ImpactPoint,
 			EffectRotation,
-			FVector(5.0f),
+			FVector(1.0f),
 			true,true, ENCPoolMethod::AutoRelease,true
-			
 				);
 		}
 		Destroy();

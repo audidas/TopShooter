@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Enemy/EnemyBase.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Gameframework/TopDownPlayerCameraManager.h"
 
 
@@ -95,7 +96,7 @@ void AAGun::Attack()
 	if (ATopDownPlayerCameraManager* CameraManager = Cast<ATopDownPlayerCameraManager>(PC->PlayerCameraManager))
 		{
 			FVector FireDir = (TargetLocation - MuzzleLocation).GetSafeNormal();
-			CameraManager->AddRecoil(FireDir, 60.0f);
+			CameraManager->AddRecoil(FireDir, 30.0f);
 		}
 	
 	CurrentSpread = FMath::Clamp(CurrentSpread + SpreadIncrease, MinSpread, MaxSpread);
@@ -149,10 +150,16 @@ void AAGun::FireAt(FVector TargetLocation)
 	
 	CurrentAmmo--;
 	
-	if (MuzzleFlashFX)
+	if (NiagaraFlashFX)
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzleFlashFX, WeaponMesh, TEXT("MuzzleSocket"), 
-			FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, true);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(),
+		NiagaraFlashFX,
+		MuzzleLocation,
+		MuzzleRotation,
+		FVector(3.0f),
+		true,true,ENCPoolMethod::AutoRelease, true
+		);
 	}
 	
 	if (FireSound)

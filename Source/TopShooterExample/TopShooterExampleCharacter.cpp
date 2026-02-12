@@ -203,7 +203,7 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 
 void ATopShooterExampleCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+
 	
 	TopDownController = Cast<ATopDownPlayerController>(GetController());
 	DefaultBrakingDeceleration = GetCharacterMovement()->BrakingDecelerationWalking;
@@ -240,8 +240,11 @@ void ATopShooterExampleCharacter::BeginPlay()
 		if (HUDWidget)
 		{
 			HUDWidget->AddToViewport();
+			
 		}
 	}
+	
+	Super::BeginPlay();
 }
 
 void ATopShooterExampleCharacter::Tick(float DeltaTime)
@@ -404,6 +407,7 @@ void ATopShooterExampleCharacter::CancelReload()
 	{
 		StopAnimMontage(ReloadMontage);
 	}
+	BP_OnReloadCancle();
 	
 	bIsReloading = false;
 	GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
@@ -475,7 +479,7 @@ void ATopShooterExampleCharacter::AnimNotify_RollImpulse()
 	FVector LaunchDir = GetActorForwardVector();
 	GetCharacterMovement()->GroundFriction = 0.0f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 0.0f;
-	LaunchCharacter(LaunchDir * 2500.0f, true, true);
+	LaunchCharacter(LaunchDir * 1500.0f, true, true);
 }
 
 void ATopShooterExampleCharacter::OnRollMontageEnded()

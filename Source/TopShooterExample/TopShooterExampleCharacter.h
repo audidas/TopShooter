@@ -141,17 +141,17 @@ public:
 	float AimMoveSpeed = 200.0f;
 	
 	UPROPERTY(EditAnywhere, Category = "Move")
-	float RollStamina = 20.0f;
+	float RollStamina = 15.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Move")
 	UAnimMontage* RollMontage;
 	// ----------------------------------------------
 	
 	
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> HUDClass;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	UUserWidget* HUDWidget;
 	
 	// 시야용 조명
@@ -197,6 +197,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
 	void BP_OnReloadStart(float Duration);
 	
+	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
+	void BP_OnReloadCancle();
+	
 	void StartReload();
 	
 	void FinishReload();
@@ -212,7 +215,7 @@ protected:
 	
 	bool bIsSprinting = false;
 	
-	float SprintCostPerSec = 15.0f; 
+	float SprintCostPerSec =5.0f; 
 	
 	bool bIsRolling = false;
 	

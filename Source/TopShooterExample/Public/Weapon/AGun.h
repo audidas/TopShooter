@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "NiagaraComponent.h"
 #include "AGun.generated.h"
 
 UCLASS()
@@ -46,8 +47,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float Damage = 10.0f;
 	
-	UPROPERTY(EditAnywhere , Category="Combat")
-	class UParticleSystem* MuzzleFlashFX;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UNiagaraSystem* NiagaraFlashFX;
 	
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	class USoundBase* FireSound;
