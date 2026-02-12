@@ -10,8 +10,12 @@
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
 #include "Blueprint/UserWidget.h"
+#include "Component/Utils/StatComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Engine/DamageEvents.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Gameframework/TopDownPlayerController.h"
 #include "Interface/OCFadeInterface.h"
 #include "Kismet/GameplayStatics.h"
@@ -36,7 +40,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 600.f;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -44,21 +48,24 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 	
+	// 캐릭터 스탯
+	StatComponent = CreateDefaultSubobject<UStatComponent>(TEXT("StatComponent"));
+	
 	// 캐릭터 시야용 조명
 	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
 	FlashLight->SetupAttachment(GetMesh());
-	FlashLight->SetRelativeLocationAndRotation(FVector(25.f, 60.f, 140.f) , FRotator(0.f, 60.0f, 0.0f));
+	FlashLight->SetRelativeLocationAndRotation(FVector(70.f, 60.f, 140.f) , FRotator(0.f, 30.0f, 0.0f));
 	
 	// 캐릭터 앞 시야 조명
 	FlashLight->Intensity = 10.0f;
 	FlashLight->AttenuationRadius = 3500.0f;
 	FlashLight->OuterConeAngle = 45.0f;
-	FlashLight->InnerConeAngle = 45.0f;
+	FlashLight->InnerConeAngle = 20.0f;
 	FlashLight->bUseInverseSquaredFalloff = false;
 	FlashLight->LightFalloffExponent = 1.0f;
 	
-	FlashLight->SourceRadius =0.0f;
-	FlashLight->SoftSourceRadius=0.0f;
+	FlashLight->SourceRadius =10.0f;
+	FlashLight->SoftSourceRadius=10.0f;
 	FlashLight->CastShadows = true;
 	
 	
@@ -69,13 +76,13 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	SurroundLight->SetRelativeLocation(FVector(0.f, 0.f, 140.f));
 	
 	SurroundLight->bUseInverseSquaredFalloff=false;
-	SurroundLight->Intensity = 10.0f;
+	SurroundLight->Intensity = 7.0f;
 	SurroundLight->LightFalloffExponent = 1.0f;
 	SurroundLight->AttenuationRadius = 400.0f;
 	
-	SurroundLight->SourceRadius = 0.0f;
-	SurroundLight->SoftSourceRadius = 0.0f;
-	SurroundLight->CastShadows = false;
+	SurroundLight->SourceRadius = 10.0f;
+	SurroundLight->SoftSourceRadius = 10.0f;
+	SurroundLight->CastShadows = true;
 	
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> LightFuncMatAsset(TEXT("/Game/Materials/Fog/M_FlashLight.M_FlashLight"));
 	if (LightFuncMatAsset.Succeeded())
@@ -87,7 +94,7 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	{
 		FLightingChannels Channels;
 		
-		Channels.bChannel0 = false;
+		Channels.bChannel0 = true;
 		Channels.bChannel1 = true;
 		Channels.bChannel2 = false;
 		GetMesh()->SetLightingChannels(Channels.bChannel0, Channels.bChannel1, Channels.bChannel2);
@@ -106,6 +113,35 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 		FlashLight->SetLightingChannels(FlashChannels.bChannel0, FlashChannels.bChannel1, FlashChannels.bChannel2);
 	}
 	
+	
+	// 체력 UI
+	HealthWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidgetComp"));
+	HealthWidgetComp->SetupAttachment(GetRootComponent());
+	HealthWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthWidgetComp->SetDrawAtDesiredSize(true);
+	
+	
+	StaminaWidgetArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("StaminaWidgetArm"));
+	StaminaWidgetArm->SetupAttachment(RootComponent);
+	StaminaWidgetArm->TargetArmLength = 0.0f;
+	
+	StaminaWidgetArm->bInheritPitch = false;
+	StaminaWidgetArm->bInheritYaw = false;
+	StaminaWidgetArm->bInheritRoll = false;
+	
+	// 스태미나 UI
+	StaminaWidgetComp= CreateDefaultSubobject<UWidgetComponent>(TEXT("StaminaWidgetComp"));
+	if (StaminaWidgetArm)
+	{
+	StaminaWidgetComp->SetupAttachment(StaminaWidgetArm);
+	}else
+	{
+		StaminaWidgetComp->SetupAttachment(RootComponent);
+	}
+	StaminaWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	StaminaWidgetComp->SetDrawAtDesiredSize(true);
+	
+	StaminaWidgetArm->SetRelativeLocation(FVector(0.f, -130.f, -20.f));
 }
 
 void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -122,7 +158,7 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
+		// EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATopShooterExampleCharacter::Look);
 		
 		// Attack
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started , this , &ATopShooterExampleCharacter::Attack);
@@ -133,6 +169,12 @@ void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 		// Aiming
 		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Started ,this ,&ATopShooterExampleCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction , ETriggerEvent::Completed ,this ,&ATopShooterExampleCharacter::StopAim);
+		
+		// Sprint
+		EnhancedInputComponent->BindAction(SprintAction , ETriggerEvent::Started , this , &ATopShooterExampleCharacter::ToggleSprint);
+		
+		// Roll
+		EnhancedInputComponent->BindAction(RollAction, ETriggerEvent::Started ,this , & ATopShooterExampleCharacter::Roll);
 	}
 	else
 	{
@@ -147,6 +189,7 @@ void ATopShooterExampleCharacter::Move(const FInputActionValue& Value)
 
 	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
+	
 }
 
 void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
@@ -160,7 +203,11 @@ void ATopShooterExampleCharacter::Look(const FInputActionValue& Value)
 
 void ATopShooterExampleCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+
+	
+	TopDownController = Cast<ATopDownPlayerController>(GetController());
+	DefaultBrakingDeceleration = GetCharacterMovement()->BrakingDecelerationWalking;
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
 	
 	if (DefaultWeaponClass)
 	{
@@ -180,31 +227,57 @@ void ATopShooterExampleCharacter::BeginPlay()
 		}
 	}
 	
+	if ( StatComponent)
+	{
+		StatComponent->bEnableStamina = true;
+		StatComponent->SetComponentTickEnabled(true);
+		StatComponent->OnZeroHealth.AddDynamic(this,&ATopShooterExampleCharacter::OnPlayerZeroHealth);
+	}
+	
 	if (HUDClass)
 	{
 		HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDClass);
 		if (HUDWidget)
 		{
 			HUDWidget->AddToViewport();
+			
 		}
 	}
+	
+	Super::BeginPlay();
 }
 
 void ATopShooterExampleCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
-	if (PC)
+	if (bIsRolling)
 	{
-		FVector TargetPoint = PC->GetCachedTargetLocation();
+		SetActorRotation(CachedRollRotation);
+	}else if (TopDownController)
+	{
+		FVector TargetPoint = TopDownController->GetCachedTargetLocation();
 		TargetPoint.Z = GetActorLocation().Z;
 		FVector LookVector = TargetPoint - GetActorLocation();
-		FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
-		SetActorRotation(LookRotation);
+		if (LookVector.SizeSquared() > 100.0f) 
+		{
+			FRotator LookRotation = FRotationMatrix::MakeFromX(LookVector).Rotator();
+			SetActorRotation(LookRotation);
+		}
 	}
 	
 	CheckOcclusion();
+	
+	if (bIsSprinting)
+	{
+		float Cost = SprintCostPerSec * DeltaTime;
+		bool bSuccess = StatComponent ->UseStamina(Cost);
+		if (!bSuccess)
+		{
+			ToggleSprint();
+		}
+	}
+	
 }
 
 void ATopShooterExampleCharacter::Attack()
@@ -215,19 +288,15 @@ void ATopShooterExampleCharacter::Attack()
 		CurrentWeapon->Attack();
 	}
 	
-	if (FireMontage)
-	{
-		PlayAnimMontage(FireMontage);
-	}
 }
 
 void ATopShooterExampleCharacter::DoMove(float Right, float Forward)
 {
-	ATopDownPlayerController* PlayerController = Cast<ATopDownPlayerController>(GetController());
-	if (PlayerController && PlayerController->PlayerCameraManager)
+	
+	if (TopDownController && TopDownController->PlayerCameraManager)
 	{
 		// find out which way is forward
-		const FRotator Rotation = PlayerController ->PlayerCameraManager->GetCameraRotation();
+		const FRotator Rotation = TopDownController ->PlayerCameraManager->GetCameraRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 		// get forward vector
@@ -240,6 +309,7 @@ void ATopShooterExampleCharacter::DoMove(float Right, float Forward)
 		AddMovementInput(ForwardDirection, Forward);
 		AddMovementInput(RightDirection, Right);
 	}
+	
 }
 
 void ATopShooterExampleCharacter::DoLook(float Yaw, float Pitch)
@@ -264,18 +334,45 @@ void ATopShooterExampleCharacter::DoJumpEnd()
 	StopJumping();
 }
 
+float ATopShooterExampleCharacter::TakeDamage(float DamageAmount,
+	struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator,
+	                         DamageCauser);
+	
+	
+	FName HitBoneName = NAME_None;
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		HitBoneName = PointEvent->HitInfo.BoneName;
+	}
+	
+	if (StatComponent)
+	{
+		StatComponent->ApplyDamage(ActualDamage, HitBoneName);
+	}
+	return ActualDamage;
+}
+
 void ATopShooterExampleCharacter::StartReload()
 {
 	
 	if (bIsReloading || ! CurrentWeapon) return;
-	
+	if (bIsAiming) StopAim();
+	if (bIsSprinting) 
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed; 
+	}
 	if (AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon))
 	{
 		CurrentGun->PlayReloadSound();
 	}
 	bIsReloading = true;
 	
-	GetCharacterMovement()->MaxWalkSpeed =300.0f;
+	GetCharacterMovement()->MaxWalkSpeed = ReloadMoveSpeed;
 	
 	float Duration = 2.0f;
 	
@@ -285,9 +382,8 @@ void ATopShooterExampleCharacter::StartReload()
 	}
 	BP_OnReloadStart(Duration);
 	
-	FTimerHandle ReloadTimerHandle;
-	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
 	
+	GetWorldTimerManager().SetTimer(ReloadTimerHandle , this , &ATopShooterExampleCharacter::FinishReload, Duration ,false);
 	
 }
 
@@ -295,7 +391,7 @@ void ATopShooterExampleCharacter::FinishReload()
 {
 	
 	bIsReloading = false;
-	GetCharacterMovement()->MaxWalkSpeed =600.0f;
+	GetCharacterMovement()->MaxWalkSpeed =DefaultMoveSpeed;
 	
 	AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon);
 	if (CurrentWeapon && CurrentGun)
@@ -304,24 +400,140 @@ void ATopShooterExampleCharacter::FinishReload()
 	}
 }
 
+void ATopShooterExampleCharacter::CancelReload()
+{
+	if (!bIsReloading) return;
+	if (ReloadMontage)
+	{
+		StopAnimMontage(ReloadMontage);
+	}
+	BP_OnReloadCancle();
+	
+	bIsReloading = false;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
+	
+	// 나중에 UI 장전 bar 취소용
+}
+
+void ATopShooterExampleCharacter::ToggleSprint()
+{
+
+	if (bIsRolling || bIsReloading) return;
+	
+	if (bIsAiming)
+	{
+		StopAim();
+	}
+	bIsSprinting = !bIsSprinting;
+	
+	
+	GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? SprintMoveSpeed : DefaultMoveSpeed;
+	
+}
+
+void ATopShooterExampleCharacter::Roll()
+{
+	if (bIsRolling) return;
+	
+	if (bIsReloading)
+	{
+		CancelReload();
+	}
+	if (bIsAiming)
+	{
+		StopAim();
+	}
+	
+	if (StatComponent && !StatComponent->UseStamina(RollStamina))
+	{
+		return;
+	}
+	FVector InputDir = GetCharacterMovement()->GetLastInputVector();
+	FRotator NewRollRotation;
+	if (InputDir.SizeSquared() > 0.01f)
+	{
+		NewRollRotation = InputDir.Rotation();
+	}else
+	{
+		
+		NewRollRotation = GetActorRotation();
+		
+	}
+	
+	CachedRollRotation = NewRollRotation; 
+	SetActorRotation(CachedRollRotation);
+	
+	bIsRolling = true;
+	bIsSprinting = false;
+	
+	if (RollMontage)
+	{
+			PlayAnimMontage(RollMontage);
+	}
+	
+}
+
+void ATopShooterExampleCharacter::AnimNotify_RollImpulse()
+{
+	
+	FVector LaunchDir = GetActorForwardVector();
+	GetCharacterMovement()->GroundFriction = 0.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 0.0f;
+	LaunchCharacter(LaunchDir * 1500.0f, true, true);
+}
+
+void ATopShooterExampleCharacter::OnRollMontageEnded()
+{
+	bIsRolling = false;
+	GetCharacterMovement()->GroundFriction = DefaultGroundFriction;
+	GetCharacterMovement()->BrakingDecelerationWalking = DefaultBrakingDeceleration;
+}
+
+void ATopShooterExampleCharacter::OnPlayerZeroHealth()
+{
+
+	Die();
+}
+
+void ATopShooterExampleCharacter::Die()
+{
+	if (bIsDead) return;
+	bIsDead = true;
+	DetachFromControllerPendingDestroy();
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	GetMesh()->SetCollisionProfileName(TEXT("PhysicsActor"));
+	GetMesh()->SetSimulatePhysics(true);
+}
+
 void ATopShooterExampleCharacter::StartAim()
 {
+	if (bIsReloading || bIsRolling) return;
+	
+	if (bIsSprinting)
+	{
+		bIsSprinting = false;
+	}
 	bIsAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed = AimMoveSpeed;
 }
 
 void ATopShooterExampleCharacter::StopAim()
 {
 	bIsAiming = false;
-	
+	if (!bIsSprinting)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = DefaultMoveSpeed;
+	}
 }
 
 void ATopShooterExampleCharacter::CheckOcclusion()
 {
-	ATopDownPlayerController* PC = Cast<ATopDownPlayerController>(GetController());
-	if (!PC|| !PC->PlayerCameraManager) return;
+	
+	if (!TopDownController|| !TopDownController->PlayerCameraManager) return;
 	
 	
-	FVector CameraLoc = PC->PlayerCameraManager->GetCameraLocation();
+	FVector CameraLoc = TopDownController->PlayerCameraManager->GetCameraLocation();
 	FVector PlayerLoc = GetActorLocation();
 	
 	

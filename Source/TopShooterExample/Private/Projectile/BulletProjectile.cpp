@@ -4,6 +4,7 @@
 #include "Projectile/BulletProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -19,10 +20,9 @@ ABulletProjectile::ABulletProjectile()
 
 	RootComponent = CollisionSphereComponent;
 	
-	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
-	ProjectileMesh->SetCollisionProfileName(TEXT("NoCollision"));
-	ProjectileMesh->SetupAttachment(RootComponent);
 	
+	NiagaraBulletComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraBulletComponent"));
+	NiagaraBulletComponent->SetupAttachment(RootComponent);
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionSphereComponent;
 	ProjectileMovement->InitialSpeed = 3000.f;
@@ -64,16 +64,17 @@ void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 		UDamageType::StaticClass()
 		);
 		
-		if (ImpactFX)
+		if (NiagaraImpactFX)
 		{
 			FRotator EffectRotation = Hit.ImpactNormal.Rotation();
-			UGameplayStatics::SpawnEmitterAtLocation(
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			ImpactFX,
+			NiagaraImpactFX,
 			Hit.ImpactPoint,
 			EffectRotation,
-			true
-			);
+			FVector(1.0f),
+			true,true, ENCPoolMethod::AutoRelease,true
+				);
 		}
 		Destroy();
 	}

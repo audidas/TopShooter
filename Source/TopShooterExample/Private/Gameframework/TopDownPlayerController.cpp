@@ -19,6 +19,8 @@ void ATopDownPlayerController::BeginPlay()
 	Super::BeginPlay();
 	
 	bShowMouseCursor = true;
+	
+	TeamId = FGenericTeamId(0);
 }
 
 void ATopDownPlayerController::SetupInputComponent()
@@ -36,6 +38,17 @@ void ATopDownPlayerController::SetupInputComponent()
 			}
 		}
 	}
+}
+
+void ATopDownPlayerController::SetGenericTeamId(const FGenericTeamId& NewTeamID)
+{
+	IGenericTeamAgentInterface::SetGenericTeamId(NewTeamID);
+	TeamId = NewTeamID;
+}
+
+FGenericTeamId ATopDownPlayerController::GetGenericTeamId() const
+{
+	return TeamId;
 }
 
 void ATopDownPlayerController::Tick(float DeltaTime)

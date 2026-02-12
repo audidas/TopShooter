@@ -30,10 +30,7 @@ public:
 	
 private: 
 	void PerformVisionScan();
-	
-	void UpdateVisionMesh(const TArray<FVector>& ViewPoints);
 
-	
 public:
 	UPROPERTY(EditAnywhere, Category = "Vision")
 	float ViewRadius = 3500.0f;
@@ -60,18 +57,5 @@ protected:
 	UPROPERTY()
 	TSet<AActor*> LastVisibleActors;
 	
-	 /*Deprecate
-	 render -> light 방식으로 변경*/
-	
-	/*UPROPERTY(EditAnywhere, Category = "FogOfWar")
-	UTextureRenderTarget2D* FogRenderTarget;*/
-	
-	/*UPROPERTY(EditAnywhere, Category = "FogOfWar")
-	UMaterialParameterCollection* FogMPC;*/
-	
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FogOfWar")
-	USceneCaptureComponent2D* FogCapture;*/
-	
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FogOfWar")
-	UStaticMeshComponent* SurroundMesh;*/
+
 };

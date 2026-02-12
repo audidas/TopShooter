@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "NiagaraComponent.h"
 #include "AGun.generated.h"
 
 UCLASS()
@@ -27,9 +28,14 @@ public:
 	UPROPERTY(EditDefaultsOnly , Category="Combat")
 	TSubclassOf<class ABulletProjectile> ProjectileClass;
 	
+	virtual void Attack() override;
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void AIAttack(AActor* TargetActor) override;	
+	
 protected:
 	
-	virtual void Attack() override;
+	void FireAt(FVector TargetLocation);
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
@@ -41,8 +47,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float Damage = 10.0f;
 	
-	UPROPERTY(EditAnywhere , Category="Combat")
-	class UParticleSystem* MuzzleFlashFX;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UNiagaraSystem* NiagaraFlashFX;
 	
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	class USoundBase* FireSound;

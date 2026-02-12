@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GenericTeamAgentInterface.h"
 #include "TopDownPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -11,7 +12,7 @@ class UInputMappingContext;
  * 
  */
 UCLASS()
-class TOPSHOOTEREXAMPLE_API ATopDownPlayerController : public APlayerController
+class TOPSHOOTEREXAMPLE_API ATopDownPlayerController : public APlayerController , public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 	
@@ -33,8 +34,14 @@ private:
 	
 	FVector TargetLocation;
 	
-public : 
+	FGenericTeamId TeamId;
+	
+public :
+	
 	FVector GetCachedTargetLocation() const {return TargetLocation;};
+	
+	virtual void SetGenericTeamId(const FGenericTeamId& NewTeamID) override;
+	virtual FGenericTeamId GetGenericTeamId() const override;
 	
 
 	

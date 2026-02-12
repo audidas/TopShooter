@@ -53,6 +53,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AimAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* SprintAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* RollAction;
 
 public:
 
@@ -76,6 +82,7 @@ protected:
 	
 	virtual void Tick(float DeltaTime) override;
 	
+	
 	void Attack();
 
 public:
@@ -83,7 +90,7 @@ public:
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
-
+	
 	/** Handles look inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoLook(float Yaw, float Pitch);
@@ -96,10 +103,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+
 public:
+	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	
 public:
+	// 무기 관련
+	// ----------------------------------------------
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ABulletProjectile> BulletProjectileClass;
 	
@@ -109,16 +121,37 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	AWeapon* CurrentWeapon;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	UAnimMontage* FireMontage;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	UAnimMontage* ReloadMontage;
+	// ----------------------------------------------
 	
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	// 이동관련
+	// ----------------------------------------------
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float DefaultMoveSpeed = 300.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float ReloadMoveSpeed = 150.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float SprintMoveSpeed = 600.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float AimMoveSpeed = 200.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Move")
+	float RollStamina = 15.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Move")
+	UAnimMontage* RollMontage;
+	// ----------------------------------------------
+	
+	
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> HUDClass;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	UUserWidget* HUDWidget;
 	
 	// 시야용 조명
@@ -127,21 +160,92 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Vision System")
 	UPointLightComponent* SurroundLight;
+	
+	// Stat UI
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* HealthWidgetComp;
+	
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class USpringArmComponent* StaminaWidgetArm;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* StaminaWidgetComp;
 
 protected:
+	
+	// 컨트롤러
+	// -------------------------------------
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	class ATopDownPlayerController* TopDownController;
+	
+	// -------------------------------------
+	
+	// 플레이어 스탯
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UStatComponent* StatComponent;
+	
+	// 장전 & 조준 
+	// --------------------------------------
 	bool bIsReloading= false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
 	bool bIsAiming = false;
 	
+	FTimerHandle ReloadTimerHandle;
+	
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
 	void BP_OnReloadStart(float Duration);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
+	void BP_OnReloadCancle();
 	
 	void StartReload();
 	
 	void FinishReload();
 	
+	void CancelReload();
+	// --------------------------------------
+	
+	// 이동관련
+	
+	// --------------------------------------
+	
+	FRotator CachedRollRotation;
+	
+	bool bIsSprinting = false;
+	
+	float SprintCostPerSec =5.0f; 
+	
+	bool bIsRolling = false;
+	
+	float DefaultGroundFriction;
+	
+	float DefaultBrakingDeceleration;
+
+	void ToggleSprint();
+	
+	void Roll();
+	
+	UFUNCTION(BlueprintCallable)
+	void AnimNotify_RollImpulse();
+	
+	UFUNCTION(BlueprintCallable)
+	void OnRollMontageEnded();
+	// --------------------------------------
+	
+	// 사망
+	// --------------------------------------
+	UFUNCTION()
+	void OnPlayerZeroHealth();
+	
+	virtual void Die();
+	
+	bool bIsDead = false;
+	//
 public:
+	// 장전 & 조준 
+	// --------------------------------------
 	UFUNCTION(BlueprintCallable)
 	bool IsReloading() const {return bIsReloading;}
 	
@@ -151,14 +255,18 @@ public:
 	void StartAim();
 	
 	void StopAim();
-	
+	// --------------------------------------
 private:
+	// 건물 시야 충돌 
+	// --------------------------------------
 	UPROPERTY()
 	TArray<AActor*> OccludedActors;
 	
 	TMap<FName , TArray<AActor*>> BuildingGroupCache;
 	
 	void CheckOcclusion();
+	
+	// --------------------------------------
 	
 };
 
