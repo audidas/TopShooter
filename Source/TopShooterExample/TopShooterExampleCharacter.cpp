@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "TopShooterExample.h"
 #include "Blueprint/UserWidget.h"
+#include "Component/Utils/InventoryComponent.h"
 #include "Component/Utils/StatComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/PointLightComponent.h"
@@ -50,6 +51,9 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	
 	// 캐릭터 스탯
 	StatComponent = CreateDefaultSubobject<UStatComponent>(TEXT("StatComponent"));
+	
+	// 인벤토리 컴포넌트
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	
 	// 캐릭터 시야용 조명
 	FlashLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("FlashLight"));
@@ -142,6 +146,8 @@ ATopShooterExampleCharacter::ATopShooterExampleCharacter()
 	StaminaWidgetComp->SetDrawAtDesiredSize(true);
 	
 	StaminaWidgetArm->SetRelativeLocation(FVector(0.f, -130.f, -20.f));
+	
+	
 }
 
 void ATopShooterExampleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -282,6 +288,8 @@ void ATopShooterExampleCharacter::Tick(float DeltaTime)
 
 void ATopShooterExampleCharacter::Attack()
 {
+	if (!CanPerformAction()) return;
+	
 	if (bIsReloading) return;
 	if ( CurrentWeapon)
 	{
@@ -358,6 +366,8 @@ float ATopShooterExampleCharacter::TakeDamage(float DamageAmount,
 
 void ATopShooterExampleCharacter::StartReload()
 {
+	if (!CanPerformAction()) return;
+	
 	
 	if (bIsReloading || ! CurrentWeapon) return;
 	if (bIsAiming) StopAim();
@@ -368,6 +378,7 @@ void ATopShooterExampleCharacter::StartReload()
 	}
 	if (AAGun* CurrentGun = Cast<AAGun>(CurrentWeapon))
 	{
+		if (CurrentGun->GetMaxAmmo() == CurrentGun->GetCurrentAmmo()) return;
 		CurrentGun->PlayReloadSound();
 	}
 	bIsReloading = true;
@@ -417,6 +428,7 @@ void ATopShooterExampleCharacter::CancelReload()
 
 void ATopShooterExampleCharacter::ToggleSprint()
 {
+	if (!CanPerformAction())return;
 
 	if (bIsRolling || bIsReloading) return;
 	
@@ -433,6 +445,7 @@ void ATopShooterExampleCharacter::ToggleSprint()
 
 void ATopShooterExampleCharacter::Roll()
 {
+	if (!CanPerformAction())return;
 	if (bIsRolling) return;
 	
 	if (bIsReloading)
@@ -508,6 +521,7 @@ void ATopShooterExampleCharacter::Die()
 
 void ATopShooterExampleCharacter::StartAim()
 {
+	if (!CanPerformAction())return;
 	if (bIsReloading || bIsRolling) return;
 	
 	if (bIsSprinting)
@@ -605,5 +619,15 @@ void ATopShooterExampleCharacter::CheckOcclusion()
 		}
 	}
 	OccludedActors = ActorsToHide;
+}
+
+bool ATopShooterExampleCharacter::CanPerformAction() const
+{
+	
+	if (!TopDownController) return false;
+	
+	if (TopDownController->IsLookInputIgnored()) return false;
+	
+	return true;
 }
 

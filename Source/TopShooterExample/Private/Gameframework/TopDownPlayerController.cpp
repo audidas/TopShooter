@@ -62,14 +62,19 @@ void ATopDownPlayerController::Tick(float DeltaTime)
 	{
 		FVector WorldLocation , WorldDirection;
 		
-		if (DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
+		if (!IsLookInputIgnored())
 		{
+			
+		
+		if (DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
+			{
 			float GunHeight = MyPawn->GetActorLocation().Z + 85.0f;
 			if (FMath::IsNearlyZero(WorldDirection.Z)) return;
 			
 			float T = (GunHeight - WorldLocation.Z) / WorldDirection.Z;
 			FVector IntersectionPoint = WorldLocation + ( WorldDirection * T);
 			TargetLocation = IntersectionPoint;
+			}
 		}
 	}
 }

@@ -174,3 +174,59 @@ void UInventoryComponent::SwapOrMoveItem(int32 SourceIndex,
 	}
 }
 
+void UInventoryComponent::TransferItem(int32 SourceIndex, bool bFromEquipment,
+	int32 DestIndex, bool bToEquipment)
+{
+	
+	if (!bFromEquipment && !bToEquipment)
+	{
+		SwapOrMoveItem(SourceIndex, DestIndex);
+		return;
+	}
+	
+	if (bFromEquipment && bToEquipment)
+	{
+		if (EquipmentItems.IsValidIndex(SourceIndex) && EquipmentItems.IsValidIndex(DestIndex))
+		{
+			EquipmentItems.Swap(SourceIndex, DestIndex);
+			OnInventoryUpdated.Broadcast();
+		}
+		return;
+	}
+	
+	if (!bFromEquipment && bToEquipment)
+	{
+		if (!Items.IsValidIndex(SourceIndex) || !EquipmentItems.IsValidIndex(DestIndex)) return;
+		
+		FItemStack& BagItem = Items[SourceIndex];
+		
+		if (!BagItem.IsValid()) return;
+		
+		// TODO: 여기서 아이템 타입 검사
+		// if (DestIndex == 0 && BagItem.ItemData->ItemType != EItemType::Weapon) return;
+		
+		FItemStack OldEquipItem = EquipmentItems[DestIndex];
+		EquipmentItems[DestIndex] = BagItem;
+		Items[SourceIndex] = OldEquipItem;
+		
+		OnInventoryUpdated.Broadcast();
+		return;
+	}
+	
+	if (bFromEquipment && !bToEquipment)
+	{
+		if (!EquipmentItems.IsValidIndex(SourceIndex) || !Items.IsValidIndex(DestIndex)) return;
+
+		FItemStack& EquipItem = EquipmentItems[SourceIndex];
+		FItemStack& BagItem = Items[DestIndex];
+
+		// 빈 슬롯으로 옮기는 경우 or 아이템이 있는 곳으로 옮기는 경우(스왑)
+		FItemStack Temp = BagItem;
+		BagItem = EquipItem;
+		EquipmentItems[SourceIndex] = Temp;
+
+		OnInventoryUpdated.Broadcast();
+		return;
+	}
+}
+

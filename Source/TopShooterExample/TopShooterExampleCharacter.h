@@ -243,6 +243,13 @@ protected:
 	
 	bool bIsDead = false;
 	//
+	
+	// 인벤토리
+	// --------------------------------------
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UInventoryComponent* InventoryComponent;
+	
+	
 public:
 	// 장전 & 조준 
 	// --------------------------------------
@@ -267,6 +274,10 @@ private:
 	void CheckOcclusion();
 	
 	// --------------------------------------
+	
+	
+	// 행동제한용
+	bool CanPerformAction() const;
 	
 };
 

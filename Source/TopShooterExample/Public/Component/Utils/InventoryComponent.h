@@ -57,5 +57,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwapOrMoveItem(int32 SourceIndex, int32 DestinationIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void TransferItem(int32 SourceIndex, bool bFromEquipment, int32 DestIndex, bool bToEquipment);
 };
 

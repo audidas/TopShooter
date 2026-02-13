@@ -43,8 +43,16 @@ void ATopDownPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT,
 	);
 	
 	FVector TargetPanOffset = FVector::ZeroVector;
+	
+	
 	if (ATopDownPlayerController* PC  = Cast<ATopDownPlayerController>(GetOwningPlayerController()))
 	{
+		
+		if (! PC-> IsLookInputIgnored())
+		{
+			
+		
+		
 		float MouseX, MouseY;
 		int32 SizeX, SizeY;
 		
@@ -71,6 +79,7 @@ void ATopDownPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT,
 			FVector CamRight = FVector::CrossProduct(FVector::UpVector, CamDir); 
 			CamRight.Normalize();
 			TargetPanOffset = (CamDir * -RatioY * MaxPanDistance) + (CamRight * RatioX * MaxPanDistance);
+		}
 		}
 	}
 	
